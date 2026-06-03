@@ -1,0 +1,42 @@
+# Blueprint de Render para el SGI "Mi Barrio, Mi Patrimonio".
+# Crea de un solo paso: una base de datos PostgreSQL y el servicio web.
+# Para usarlo: sube el repo a GitHub y en Render elige "New > Blueprint".
+
+databases:
+  - name: sgi-db
+    databaseName: sgi
+    user: sgi
+    plan: free # Postgres gratuito de Render (suficiente para la demo)
+
+services:
+  - type: web
+    name: sgi
+    runtime: node
+    plan: free
+    # --include=dev: tsx y drizzle-kit son devDependencies pero se necesitan
+    # en producción (la app se ejecuta con tsx; las migraciones con drizzle-kit).
+    buildCommand: npm install --include=dev
+    # Crea/actualiza las tablas en Postgres y luego arranca la app. Se hace en
+    # el startCommand (y no en preDeployCommand) porque éste requiere plan de
+    # pago en Render; así el despliegue funciona también en el plan gratuito.
+    # db:push es idempotente: tras la primera vez no hace cambios.
+    startCommand: npm run db:push && npm start
+    healthCheckPath: /salud
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_DRIVER
+        value: postgres
+      # Render inyecta aquí la cadena de conexión interna de la base de datos.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sgi-db
+          property: connectionString
+      - key: GESTOR_USUARIO
+        value: gestor
+      # La contraseña NO se versiona: se captura a mano en el panel de Render.
+      - key: GESTOR_PASSWORD
+        sync: false
+      # Render genera un secreto largo y aleatorio para firmar los JWT.
+      - key: JWT_SECRET
+        generateValue: true

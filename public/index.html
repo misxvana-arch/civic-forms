@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Inscripción · Mi Barrio, Mi Patrimonio</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+  :root{
+    --vino:#7B1E3D;
+    --vino-claro:#A8345C;
+    --verde:#5E7D5A;
+    --verde-claro:#7A9B6F;
+    --crema:#F4EFE6;
+    --arena:#EAE2D3;
+    --tinta:#2E2A28;
+    --gris:#6B645E;
+    --linea:#D9CFBE;
+    --ok:#2E7D5B;
+    --err:#B23A48;
+    --sombra:0 4px 20px rgba(0,0,0,.08);
+    --rad:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(123,30,61,.06), transparent 40%),
+      radial-gradient(circle at 88% 82%, rgba(94,125,90,.07), transparent 42%),
+      var(--crema);
+    color:var(--tinta);
+    line-height:1.55;
+    min-height:100vh;
+  }
+  header{
+    background:var(--vino);
+    color:#fff;
+    padding:22px 28px;
+    display:flex;align-items:center;gap:16px;
+    box-shadow:var(--sombra);
+    position:relative;overflow:hidden;
+  }
+  header::after{
+    content:"";position:absolute;right:-40px;top:-30px;
+    width:180px;height:180px;border-radius:50%;
+    background:rgba(255,255,255,.05);
+  }
+  .logo-badge{
+    width:52px;height:52px;border-radius:12px;flex-shrink:0;
+    background:var(--verde);display:grid;place-items:center;
+    font-weight:800;font-size:22px;color:#fff;letter-spacing:-1px;
+    box-shadow:inset 0 0 0 3px rgba(255,255,255,.15);
+  }
+  header h1{font-size:1.25rem;font-weight:700;letter-spacing:.3px}
+  header p{font-size:.82rem;opacity:.85;font-weight:400}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+  .tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+  .tab{
+    border:none;cursor:pointer;font-family:inherit;font-size:.92rem;font-weight:600;
+    padding:10px 20px;border-radius:999px;background:var(--arena);color:var(--gris);
+    transition:all .2s;
+  }
+  .tab.active{background:var(--vino);color:#fff;box-shadow:var(--sombra)}
+  .tab:hover:not(.active){background:var(--linea)}
+  .panel{display:none;animation:fade .35s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card{
+    background:#fff;border:1px solid var(--linea);border-radius:var(--rad);
+    padding:26px;box-shadow:var(--sombra);margin-bottom:22px;
+  }
+  .card h2{
+    font-size:1.05rem;color:var(--vino);margin-bottom:4px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .card h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--verde)}
+  .card .sub{font-size:.85rem;color:var(--gris);margin-bottom:20px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field.full{grid-column:1 / -1}
+  label{font-size:.8rem;font-weight:600;color:var(--tinta)}
+  label .req{color:var(--err)}
+  input,select{
+    font-family:inherit;font-size:.9rem;padding:10px 12px;
+    border:1.5px solid var(--linea);border-radius:9px;background:#fdfcf9;
+    transition:border-color .2s,box-shadow .2s;width:100%;
+  }
+  input:focus,select:focus{
+    outline:none;border-color:var(--vino-claro);
+    box-shadow:0 0 0 3px rgba(168,52,92,.12);
+  }
+  input.invalid,select.invalid{border-color:var(--err);background:#fdf3f4}
+  .hint{font-size:.72rem;color:var(--gris)}
+  .err-msg{font-size:.72rem;color:var(--err);display:none}
+  .err-msg.show{display:block}
+  .privacy{
+    grid-column:1 / -1;background:var(--crema);border:1px dashed var(--vino-claro);
+    border-radius:10px;padding:14px 16px;font-size:.8rem;color:var(--gris);
+  }
+  .privacy strong{color:var(--vino)}
+  .check{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
+  .check input{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--vino)}
+  .check label{font-size:.82rem;font-weight:500;color:var(--tinta)}
+  .actions{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+  .btn{
+    font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;
+    padding:12px 26px;border-radius:10px;border:none;transition:transform .12s,box-shadow .2s,background .2s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--vino);color:#fff;box-shadow:var(--sombra)}
+  .btn-primary:hover{background:var(--vino-claro)}
+  .btn-ghost{background:transparent;color:var(--gris);border:1.5px solid var(--linea)}
+  .btn-ghost:hover{background:var(--arena)}
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--ok);color:#fff;padding:14px 26px;border-radius:10px;
+    font-weight:600;font-size:.9rem;box-shadow:var(--sombra);opacity:0;
+    transition:transform .4s,opacity .4s;z-index:50;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  .toast.error{background:var(--err)}
+  /* acceso / sesión del gestor */
+  .auth-area{margin-left:auto;position:relative;z-index:1;display:flex;align-items:center;gap:12px}
+  .auth-btn{
+    font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;
+    padding:9px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.4);
+    background:rgba(255,255,255,.12);color:#fff;transition:background .2s;
+  }
+  .auth-btn:hover{background:rgba(255,255,255,.22)}
+  .auth-user{display:flex;align-items:center;gap:10px}
+  .auth-nombre{font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px}
+  .auth-nombre::before{content:"●";color:var(--verde-claro);font-size:.7rem}
+  [hidden]{display:none !important}
+  /* hub de inicio */
+  .hero{
+    background:linear-gradient(120deg,var(--vino),var(--vino-claro));
+    color:#fff;border-radius:var(--rad);padding:32px;margin-bottom:22px;
+    box-shadow:var(--sombra);display:flex;gap:28px;align-items:center;
+    flex-wrap:wrap;position:relative;overflow:hidden;
+  }
+  .hero::after{content:"";position:absolute;right:-60px;bottom:-60px;
+    width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06)}
+  .hero-text{flex:1 1 320px;position:relative;z-index:1}
+  .hero-eyebrow{font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+    opacity:.8;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:999px;display:inline-block}
+  .hero-text h2{font-size:1.5rem;font-weight:800;margin:12px 0 8px;line-height:1.2}
+  .hero-text p{font-size:.9rem;opacity:.92;max-width:560px}
+  .hero-text strong{color:#fff}
+  .hero-stats{display:flex;gap:14px;position:relative;z-index:1;flex-wrap:wrap}
+  .hero-stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+    border-radius:12px;padding:14px 18px;min-width:104px;text-align:center;backdrop-filter:blur(2px)}
+  .hs-num{display:block;font-size:1.7rem;font-weight:800;line-height:1}
+  .hs-lbl{display:block;font-size:.7rem;opacity:.85;margin-top:5px}
+  .hub-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .hub-card{
+    font-family:inherit;text-align:left;cursor:pointer;
+    background:#fff;border:1px solid var(--linea);border-radius:var(--rad);
+    padding:22px;box-shadow:var(--sombra);display:flex;flex-direction:column;gap:8px;
+    transition:transform .15s,box-shadow .2s,border-color .2s;
+  }
+  .hub-card:hover{transform:translateY(-3px);border-color:var(--vino-claro);box-shadow:0 8px 26px rgba(0,0,0,.12)}
+  .hub-ico{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;
+    color:#fff;font-size:20px;font-weight:800;margin-bottom:4px}
+  .hub-title{font-size:1.02rem;font-weight:700;color:var(--vino)}
+  .hub-desc{font-size:.82rem;color:var(--gris);flex:1}
+  .hub-go{font-size:.82rem;font-weight:700;color:var(--verde);margin-top:4px}
+  @media(max-width:760px){.hub-grid{grid-template-columns:1fr}}
+  /* dashboard */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:6px}
+  .stat{
+    background:#fff;border:1px solid var(--linea);border-radius:var(--rad);
+    padding:18px;box-shadow:var(--sombra);position:relative;overflow:hidden;
+  }
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--verde)}
+  .stat:nth-child(2)::before{background:var(--vino)}
+  .stat:nth-child(3)::before{background:var(--verde-claro)}
+  .stat:nth-child(4)::before{background:var(--vino-claro)}
+  .stat .num{font-size:1.9rem;font-weight:800;color:var(--vino);line-height:1}
+  .stat .lbl{font-size:.76rem;color:var(--gris);margin-top:6px}
+  /* tabla */
+  .table-wrap{overflow-x:auto;border-radius:var(--rad);border:1px solid var(--linea)}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.82rem}
+  th{background:var(--vino);color:#fff;text-align:left;padding:12px 14px;font-weight:600;white-space:nowrap}
+  td{padding:11px 14px;border-bottom:1px solid var(--arena);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--crema)}
+  .folio{font-family:'Courier New',monospace;font-weight:700;color:var(--vino);font-size:.78rem}
+  .estado{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.7rem;font-weight:700;white-space:nowrap}
+  .estado.solicitud{background:#FBEFD6;color:#8A5A00}
+  .estado.aprobado{background:#DCEBF8;color:#185FA5}
+  .estado.programado{background:#E7E3F7;color:#534AB7}
+  .estado.concluido{background:#DDEFE4;color:#0F6E56}
+  .avanzar{cursor:pointer;border:1.5px solid var(--verde);background:#fff;color:var(--verde);
+    font-weight:700;font-size:.72rem;padding:5px 10px;border-radius:7px;white-space:nowrap;transition:all .2s}
+  .avanzar:hover{background:var(--verde);color:#fff}
+  .avanzar:disabled{opacity:.4;cursor:default;border-color:var(--linea);color:var(--gris)}
+  .avanzar:disabled:hover{background:#fff;color:var(--gris)}
+  .badge-pub{background:var(--verde-claro);color:#fff;padding:2px 9px;border-radius:6px;font-size:.7rem;font-weight:600}
+  .badge-priv{background:var(--vino-claro);color:#fff;padding:2px 9px;border-radius:6px;font-size:.7rem;font-weight:600}
+  .del{cursor:pointer;color:var(--err);font-weight:700;border:none;background:none;font-size:.9rem;padding:4px 8px;border-radius:6px}
+  .del:hover{background:#fdf3f4}
+  /* encuesta: estrellas y segmento */
+  .estrellas{display:flex;align-items:center;gap:4px}
+  .estrella{background:none;border:none;cursor:pointer;font-size:1.9rem;line-height:1;
+    color:var(--linea);transition:color .12s,transform .12s;padding:0 2px}
+  .estrella:hover{transform:scale(1.12)}
+  .estrella.on{color:#E8A93B}
+  .estrellas-txt{font-size:.8rem;color:var(--gris);margin-left:10px}
+  .segmento{display:flex;gap:10px;flex-wrap:wrap}
+  .seg-btn{font-family:inherit;font-size:.86rem;font-weight:600;cursor:pointer;
+    padding:9px 18px;border-radius:9px;border:1.5px solid var(--linea);background:#fdfcf9;color:var(--gris);transition:all .15s}
+  .seg-btn:hover{border-color:var(--vino-claro)}
+  .seg-btn.on{background:var(--vino);color:#fff;border-color:var(--vino)}
+  /* resumen de encuestas */
+  .enc-top{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+  .enc-big{background:var(--crema);border:1px solid var(--linea);border-radius:12px;
+    padding:16px 22px;text-align:center;min-width:120px}
+  .enc-big .n{font-size:2rem;font-weight:800;color:var(--vino);line-height:1}
+  .enc-big .n small{font-size:1rem;color:var(--gris);font-weight:700}
+  .enc-big .l{font-size:.72rem;color:var(--gris);margin-top:6px}
+  .enc-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.8rem}
+  .enc-bar-row .star{width:42px;color:#E8A93B;font-weight:700;white-space:nowrap}
+  .enc-bar-track{flex:1;background:var(--arena);border-radius:6px;height:11px;overflow:hidden;display:block}
+  .enc-bar-fill{display:block;height:100%;background:var(--verde)}
+  .enc-bar-row .cnt{width:28px;text-align:right;color:var(--gris)}
+  .enc-coment{border-left:3px solid var(--verde-claro);padding:8px 12px;margin-top:10px;
+    background:var(--crema);border-radius:0 8px 8px 0}
+  .enc-coment .c{font-size:.84rem;color:var(--tinta)}
+  .enc-coment .m{font-size:.72rem;color:#E8A93B;font-weight:700;margin-bottom:2px}
+  /* bitácora */
+  .bita-item{display:flex;gap:14px;padding:14px 4px;border-bottom:1px solid var(--arena)}
+  .bita-item:last-child{border-bottom:none}
+  .bita-ico{width:34px;height:34px;border-radius:9px;flex-shrink:0;display:grid;place-items:center;
+    color:#fff;font-size:15px;font-weight:800}
+  .bita-ico.avanzar{background:var(--verde)}
+  .bita-ico.eliminar{background:var(--err)}
+  .bita-body{flex:1;min-width:0}
+  .bita-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+  .bita-accion{font-weight:700;font-size:.88rem;color:var(--tinta)}
+  .bita-fecha{font-size:.74rem;color:var(--gris);white-space:nowrap}
+  .bita-detalle{font-size:.82rem;color:var(--gris);margin-top:2px}
+  .bita-folio{font-family:'Courier New',monospace;font-weight:700;color:var(--vino);font-size:.78rem}
+  .bita-actor{font-size:.74rem;color:var(--verde);font-weight:600}
+  .empty{text-align:center;padding:50px 20px;color:var(--gris)}
+  .empty .big{font-size:2.4rem;margin-bottom:8px;opacity:.4}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .search{max-width:280px}
+  footer{text-align:center;font-size:.74rem;color:var(--gris);padding:24px;opacity:.8}
+  @media(max-width:640px){.grid,.stats{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+  /* --- Mapa de escuelas (Leaflet) --- */
+  .mapa-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--gris);margin-bottom:14px}
+  .leyenda span{display:inline-flex;align-items:center;gap:6px}
+  .leyenda i{width:13px;height:13px;border-radius:50%;display:inline-block;border:1.5px solid #fff;box-shadow:0 0 0 1px #D9CFBE}
+  .mapa-layout{display:grid;grid-template-columns:1fr 330px;gap:16px}
+  #mapaEscuelas{height:560px;border-radius:14px;border:1px solid #D9CFBE;z-index:1}
+  #infoEscuela{background:#fff;border:1px solid #D9CFBE;border-radius:14px;padding:20px;height:560px;overflow:auto}
+  #infoEscuela h3{color:var(--vino);font-size:1.05rem;margin-bottom:12px;line-height:1.3}
+  .info-estado{color:#fff;font-weight:700;font-size:.78rem;padding:6px 13px;border-radius:999px;display:inline-block;margin-bottom:16px}
+  .info-row{font-size:.86rem;margin-bottom:8px;color:var(--gris)}
+  .info-row strong{color:#2E2A28;font-weight:600}
+  #infoEscuela hr{border:none;border-top:1px solid #EAE2D3;margin:14px 0}
+  .info-placeholder{color:var(--gris);font-size:.86rem;text-align:center;margin-top:210px;padding:0 14px}
+  .info-placeholder .big{font-size:2.4rem;opacity:.35;display:block;margin-bottom:10px}
+  @media(max-width:820px){.mapa-layout{grid-template-columns:1fr}#infoEscuela{height:auto}}
+  /* --- Bloqueo y autollenado del formulario --- */
+  .aviso-bloqueo{margin-top:10px;background:#FBE9E7;border:1px solid var(--err);border-radius:10px;padding:12px 14px;font-size:.82rem;color:#8A2417;line-height:1.4}
+  .aviso-bloqueo strong{color:var(--err)}
+  .field.autollenado input,.field.autollenado select{background:#F1F7F0;border-color:var(--verde)}
+  .field.autollenado label::after{content:" · autocompletado";color:var(--verde);font-weight:600;font-size:.7rem}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+
+  /* ====================================================================
+     REDISEÑO UX — navegación fija, formulario por pasos y pulido
+     ==================================================================== */
+
+  /* --- Navegación: barra fija que NO se parte en móvil (scroll lateral) --- */
+  .tabs{
+    position:sticky;top:0;z-index:30;
+    background:rgba(244,239,230,.92);backdrop-filter:blur(8px);
+    padding:12px 0;margin:0 0 20px;
+    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    border-bottom:1px solid transparent;transition:border-color .2s;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs.scrolled{border-color:var(--linea)}
+  .tab{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px}
+  .tab .t-ico{font-size:1rem;line-height:1}
+
+  /* --- Stepper del formulario por pasos --- */
+  .stepper{display:flex;gap:10px;margin-bottom:26px}
+  .step-item{
+    flex:1;display:flex;align-items:center;gap:11px;padding:13px 16px;
+    border-radius:12px;background:var(--crema);border:1.5px solid var(--linea);
+    cursor:default;transition:all .25s;
+  }
+  .step-item .step-num{
+    width:27px;height:27px;border-radius:50%;flex-shrink:0;
+    display:grid;place-items:center;background:#fff;border:1.5px solid var(--linea);
+    color:var(--gris);font-weight:800;font-size:.84rem;transition:all .25s;
+  }
+  .step-item .step-lbl{font-size:.86rem;font-weight:700;color:var(--gris);line-height:1.2}
+  .step-item.on{background:#fff;border-color:var(--vino);box-shadow:var(--sombra)}
+  .step-item.on .step-num{background:var(--vino);border-color:var(--vino);color:#fff}
+  .step-item.on .step-lbl{color:var(--vino)}
+  .step-item.done{cursor:pointer;border-color:var(--verde)}
+  .step-item.done .step-num{background:var(--verde);border-color:var(--verde);color:#fff;font-size:0}
+  .step-item.done .step-num::after{content:"✓";font-size:.9rem}
+  .step-item.done .step-lbl{color:var(--tinta)}
+  .step-item.done:hover{background:#F1F7F0}
+  .form-paso{animation:fade .3s ease}
+  .paso-nav{display:flex;gap:12px;align-items:center;margin-top:24px;flex-wrap:wrap}
+  .paso-nav .btn-next,.paso-nav button[type="submit"]{margin-left:auto}
+  .paso-hint{font-size:.78rem;color:var(--gris)}
+
+  /* --- Pulido general --- */
+  .card{transition:box-shadow .25s}
+  .btn-primary:hover{box-shadow:0 6px 22px rgba(123,30,61,.28)}
+  input:hover:not(:focus),select:hover:not(:focus){border-color:var(--vino-claro)}
+  .header-text{min-width:0}
+
+  /* --- Compactación móvil (lo que rompía la navegación y el uso) --- */
+  @media(max-width:640px){
+    header{padding:15px 16px;gap:12px}
+    header h1{font-size:1.05rem;line-height:1.15}
+    header p{font-size:.7rem;line-height:1.3}
+    .logo-badge{width:42px;height:42px;font-size:17px}
+    .auth-btn{padding:7px 12px;font-size:.72rem}
+    .wrap{padding:16px 14px 60px}
+    .hero{padding:22px 20px;gap:18px}
+    .hero-text h2{font-size:1.3rem}
+    .hero-text p{font-size:.85rem}
+    .card{padding:20px 17px}
+    .tab{padding:9px 15px;font-size:.86rem}
+    .stepper{gap:7px}
+    .step-item{padding:11px;justify-content:center}
+    .step-item .step-lbl{display:none}
+    .step-item.on .step-lbl{display:block;font-size:.8rem}
+    .paso-nav .btn{flex:1 1 auto;text-align:center}
+  }
+
+  /* --- Aviso de privacidad / textos legales --- */
+  .legal{max-width:820px;margin:0 auto}
+  .legal h3{font-size:.95rem;color:var(--vino);margin:20px 0 7px}
+  .legal p{font-size:.86rem;color:var(--tinta);line-height:1.6;margin-bottom:8px}
+  .legal ul{margin:6px 0 10px 22px}
+  .legal li{font-size:.86rem;color:var(--tinta);line-height:1.55;margin-bottom:5px}
+  .legal mark{background:#FFF3CD;color:#7A5B00;padding:1px 6px;border-radius:4px;font-weight:600;font-size:.82rem}
+  .legal-fecha{margin-top:20px;font-size:.78rem;color:var(--gris);border-top:1px solid var(--arena);padding-top:14px}
+  .link-aviso{background:none;border:none;color:var(--vino);font-weight:700;text-decoration:underline;
+    cursor:pointer;font-family:inherit;font-size:inherit;padding:0}
+  .link-aviso:hover{color:var(--vino-claro)}
+  footer .link-aviso{margin-top:8px;display:inline-block;font-size:.76rem}
+
+  /* --- Barras del panel (cobertura, estados, barrios) --- */
+  .barra-row{margin-bottom:15px}
+  .barra-row:last-child{margin-bottom:0}
+  .barra-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.84rem;margin-bottom:5px}
+  .barra-top .lbl{color:var(--tinta);font-weight:600}
+  .barra-top .val{color:var(--gris);font-size:.8rem;white-space:nowrap}
+  .barra-top .val strong{color:var(--vino);font-size:.92rem}
+  .barra-track{position:relative;background:var(--arena);border-radius:7px;height:16px;overflow:hidden}
+  .barra-fill{height:100%;border-radius:7px;background:var(--vino);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  /* barra apilada: porción concluida sobre el total inscrito */
+  .barra-fill.verde{background:var(--ok)}
+  .barra-sub{font-size:.74rem;color:var(--gris);margin-top:4px}
+  .estado-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-badge">MB</div>
+  <div class="header-text">
+    <h1>Mi Barrio, Mi Patrimonio</h1>
+    <p>Portal de inscripción de instituciones educativas · Sistema de Gestión de Inscripciones (SGI)</p>
+  </div>
+  <div class="auth-area">
+    <button class="auth-btn" id="btnAcceso" type="button">Acceso gestor</button>
+    <div class="auth-user" id="authUser" hidden>
+      <span class="auth-nombre" id="authNombre">gestor</span>
+      <button class="auth-btn" id="btnSalir" type="button">Cerrar sesión</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab active" data-tab="inicio"><span class="t-ico">⌂</span>Inicio</button>
+    <button class="tab" data-tab="form"><span class="t-ico">✏️</span>Nueva inscripción</button>
+    <button class="tab" data-tab="encuesta"><span class="t-ico">★</span>Encuesta</button>
+    <button class="tab gestor-only" data-tab="registros" hidden><span class="t-ico">▦</span>Registros</button>
+    <button class="tab gestor-only" data-tab="panel" hidden><span class="t-ico">◔</span>Panel</button>
+    <button class="tab gestor-only" data-tab="bitacora" hidden><span class="t-ico">≡</span>Bitácora</button>
+    <button class="tab gestor-only" data-tab="mapa" hidden><span class="t-ico">◉</span>Mapa</button>
+  </div>
+
+  <!-- INICIO (hub) -->
+  <section class="panel active" id="inicio">
+    <div class="hero">
+      <div class="hero-text">
+        <span class="hero-eyebrow">Programa municipal de patrimonio cultural</span>
+        <h2>Bienvenido al Sistema de Gestión de Inscripciones</h2>
+        <p>Desde aquí gestionas todo el ciclo de las jornadas de <strong>Mi Barrio, Mi Patrimonio</strong>: inscribe instituciones educativas, da seguimiento a cada expediente y consulta indicadores en tiempo real.</p>
+      </div>
+      <div class="hero-stats gestor-only" hidden>
+        <div class="hero-stat"><span class="hs-num" id="hsEscuelas">—</span><span class="hs-lbl">Escuelas inscritas</span></div>
+        <div class="hero-stat"><span class="hs-num" id="hsNinos">—</span><span class="hs-lbl">Niñas y niños</span></div>
+        <div class="hero-stat"><span class="hs-num" id="hsConcluidas">—</span><span class="hs-lbl">Jornadas concluidas</span></div>
+      </div>
+    </div>
+
+    <div class="hub-grid">
+      <button class="hub-card" data-goto="form">
+        <span class="hub-ico" style="background:var(--vino)">＋</span>
+        <span class="hub-title">Nueva inscripción</span>
+        <span class="hub-desc">Captura los datos de una escuela y genera su folio y expediente.</span>
+        <span class="hub-go">Capturar →</span>
+      </button>
+      <button class="hub-card" data-goto="encuesta">
+        <span class="hub-ico" style="background:var(--verde)">★</span>
+        <span class="hub-title">Encuesta de satisfacción</span>
+        <span class="hub-desc">¿Participaste en una jornada? Cuéntanos tu experiencia. Es anónima.</span>
+        <span class="hub-go">Responder →</span>
+      </button>
+      <button class="hub-card gestor-only" data-goto="registros" hidden>
+        <span class="hub-ico" style="background:var(--verde)">▦</span>
+        <span class="hub-title">Registros</span>
+        <span class="hub-desc">Consulta, busca, avanza el estado y exporta los expedientes.</span>
+        <span class="hub-go">Ver expedientes →</span>
+      </button>
+      <button class="hub-card gestor-only" data-goto="panel" hidden>
+        <span class="hub-ico" style="background:var(--vino-claro)">◔</span>
+        <span class="hub-title">Panel de seguimiento</span>
+        <span class="hub-desc">Cobertura, estados y distribución por barrio, calculados en el servidor.</span>
+        <span class="hub-go">Abrir panel →</span>
+      </button>
+      <button class="hub-card gestor-only" data-goto="bitacora" hidden>
+        <span class="hub-ico" style="background:var(--verde-claro)">≡</span>
+        <span class="hub-title">Bitácora de auditoría</span>
+        <span class="hub-desc">Historial de quién avanzó o eliminó cada expediente, con fecha y hora.</span>
+        <span class="hub-go">Ver historial →</span>
+      </button>
+      <button class="hub-card gestor-only" data-goto="mapa" hidden>
+        <span class="hub-ico" style="background:var(--vino-claro)">◉</span>
+        <span class="hub-title">Mapa de escuelas</span>
+        <span class="hub-desc">Ubica las primarias de Puebla y el estado de la plática de cada una.</span>
+        <span class="hub-go">Abrir mapa →</span>
+      </button>
+      <button class="hub-card publico-only" data-goto="acceso">
+        <span class="hub-ico" style="background:var(--verde)">🔒</span>
+        <span class="hub-title">Acceso del gestor</span>
+        <span class="hub-desc">¿Eres del equipo de la Gerencia? Ingresa para administrar los expedientes.</span>
+        <span class="hub-go">Iniciar sesión →</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ACCESO (login del gestor) -->
+  <section class="panel" id="acceso">
+    <div class="card" style="max-width:440px;margin:0 auto">
+      <h2><span class="dot"></span>Acceso del gestor</h2>
+      <p class="sub">Área restringida de la Gerencia del Centro Histórico y Patrimonio Cultural. La inscripción de escuelas es pública; consultar y administrar expedientes requiere sesión.</p>
+      <form id="loginForm" novalidate>
+        <div class="field" style="margin-bottom:14px">
+          <label>Usuario</label>
+          <input type="text" id="lgUsuario" autocomplete="username" placeholder="gestor">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="lgPassword" autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <span class="err-msg" data-for="login" id="loginErr" style="margin-top:8px">Usuario o contraseña incorrectos.</span>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Entrar</button>
+          <button type="button" class="btn btn-ghost" data-goto="inicio" id="lgCancelar">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- FORMULARIO -->
+  <section class="panel" id="form">
+    <div class="card">
+      <h2><span class="dot"></span>Solicitud de inscripción</h2>
+      <p class="sub">Captura los datos de la escuela o institución que desea participar en las jornadas. Los campos con <span style="color:var(--err)">*</span> son obligatorios.</p>
+
+      <form id="inscForm" novalidate>
+        <div class="stepper" id="stepper">
+          <div class="step-item on" data-step="1"><span class="step-num">1</span><span class="step-lbl">La escuela</span></div>
+          <div class="step-item" data-step="2"><span class="step-num">2</span><span class="step-lbl">Contacto</span></div>
+          <div class="step-item" data-step="3"><span class="step-num">3</span><span class="step-lbl">Jornada</span></div>
+        </div>
+
+        <div class="form-paso" data-paso="1">
+        <div class="grid">
+          <div class="field full">
+            <label>Nombre oficial de la institución <span class="req">*</span></label>
+            <input type="text" id="nombre" list="listaEscuelas" autocomplete="off" placeholder="Escribe para buscar en el padrón de escuelas…">
+            <datalist id="listaEscuelas"></datalist>
+            <span class="hint" id="nombreHint">Elige una escuela del padrón y autocompletamos sus datos. También puedes escribir una que no aparezca.</span>
+            <span class="err-msg" data-for="nombre">Ingresa el nombre de la institución.</span>
+            <div class="aviso-bloqueo" id="nombreBloqueo" hidden>
+              <strong>Esta escuela ya concluyó su jornada.</strong> No es posible volver a inscribirla; cada institución participa una vez por ciclo.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Tipo de sostenimiento <span class="req">*</span></label>
+            <select id="sostenimiento">
+              <option value="">Selecciona…</option>
+              <option value="Pública">Pública</option>
+              <option value="Privada">Privada</option>
+            </select>
+            <span class="err-msg" data-for="sostenimiento">Selecciona el tipo.</span>
+          </div>
+
+          <div class="field">
+            <label>CCT (Clave de Centro de Trabajo) <span class="req">*</span></label>
+            <input type="text" id="cct" placeholder="Ej. 21DPR1234X" maxlength="12" style="text-transform:uppercase">
+            <span class="hint">Identificador único; evita inscripciones duplicadas.</span>
+            <span class="err-msg" data-for="cct">CCT obligatorio (mín. 8 caracteres).</span>
+          </div>
+
+          <div class="field full">
+            <label>Domicilio de la escuela <span class="req">*</span></label>
+            <input type="text" id="domicilio" placeholder="Calle, número, colonia">
+            <span class="err-msg" data-for="domicilio">Ingresa el domicilio.</span>
+          </div>
+
+          <div class="field">
+            <label>Barrio del Centro Histórico</label>
+            <select id="barrio">
+              <option value="">— Fuera del Centro Histórico —</option>
+              <option value="Analco">Analco</option>
+              <option value="El Alto">El Alto</option>
+              <option value="Xanenetla">Xanenetla</option>
+              <option value="La Luz">La Luz</option>
+              <option value="San Miguelito">San Miguelito</option>
+              <option value="San Pablo de los Frailes">San Pablo de los Frailes</option>
+            </select>
+            <span class="hint">Se detecta solo al elegir la escuela del padrón; puedes corregirlo.</span>
+          </div>
+        </div>
+        <div class="paso-nav">
+          <button type="reset" class="btn btn-ghost">Limpiar</button>
+          <button type="button" class="btn btn-primary btn-next" data-next="2">Siguiente →</button>
+        </div>
+        </div>
+
+        <div class="form-paso" data-paso="2" hidden>
+        <div class="grid">
+          <div class="field full">
+            <label>Nombre del enlace responsable <span class="req">*</span></label>
+            <input type="text" id="enlace" placeholder="Nombre completo">
+            <span class="err-msg" data-for="enlace">Ingresa el nombre del enlace.</span>
+          </div>
+
+          <div class="field">
+            <label>Cargo del enlace</label>
+            <input type="text" id="cargo" placeholder="Ej. Directora, Docente…">
+          </div>
+
+          <div class="field">
+            <label>Correo electrónico <span class="req">*</span></label>
+            <input type="email" id="correo" placeholder="contacto@escuela.mx">
+            <span class="err-msg" data-for="correo">Correo electrónico no válido.</span>
+          </div>
+
+          <div class="field">
+            <label>Teléfono / WhatsApp <span class="req">*</span></label>
+            <input type="tel" id="telefono" placeholder="10 dígitos" maxlength="10">
+            <span class="err-msg" data-for="telefono">Teléfono a 10 dígitos.</span>
+          </div>
+        </div>
+        <div class="paso-nav">
+          <button type="button" class="btn btn-ghost btn-prev" data-prev="1">← Atrás</button>
+          <button type="button" class="btn btn-primary btn-next" data-next="3">Siguiente →</button>
+        </div>
+        </div>
+
+        <div class="form-paso" data-paso="3" hidden>
+        <div class="grid">
+          <div class="field">
+            <label>Grado(s) a inscribir <span class="req">*</span></label>
+            <input type="text" id="grados" placeholder="Ej. 2°, 3° y 4°">
+            <span class="err-msg" data-for="grados">Indica al menos un grado.</span>
+          </div>
+
+          <div class="field">
+            <label>Niñas y niños por grupo <span class="req">*</span></label>
+            <input type="number" id="ninos" placeholder="Máx. 40" min="1" max="40">
+            <span class="hint">Límite de 40 por grupo.</span>
+            <span class="err-msg" data-for="ninos">Número entre 1 y 40.</span>
+          </div>
+
+          <div class="field">
+            <label>Fecha tentativa de la jornada</label>
+            <input type="date" id="fecha">
+          </div>
+
+          <div class="field">
+            <label>Hora tentativa de la jornada</label>
+            <input type="time" id="hora">
+            <span class="hint">Formato de 24 horas.</span>
+            <span class="err-msg" data-for="hora">Hora en formato HH:MM.</span>
+          </div>
+
+          <div class="privacy">
+            <strong>Aviso de privacidad simplificado.</strong> La <strong>Gerencia del Centro Histórico y Patrimonio Cultural del H. Ayuntamiento de Puebla</strong> (responsable) tratará sus datos personales con la finalidad de <strong>gestionar la inscripción y ejecutar las jornadas</strong> del programa "Mi Barrio, Mi Patrimonio". No se realizan transferencias que requieran su consentimiento ni tratamientos para finalidades secundarias. Tratándose de datos de niñas y niños, su recabación requiere el consentimiento del padre, madre o tutor. Puede manifestar su negativa o ejercer sus derechos ARCO ante la Unidad de Transparencia. Consulte el <button type="button" class="link-aviso" data-goto="aviso">aviso de privacidad integral</button>.
+            <div class="check">
+              <input type="checkbox" id="consent">
+              <label for="consent">Acepto el aviso de privacidad y declaro contar con el consentimiento de los tutores para el tratamiento de los datos de las niñas y niños participantes. <span class="req">*</span></label>
+            </div>
+            <span class="err-msg" data-for="consent" style="margin-top:6px">Debes aceptar para continuar.</span>
+          </div>
+        </div>
+        <div class="paso-nav">
+          <button type="button" class="btn btn-ghost btn-prev" data-prev="2">← Atrás</button>
+          <button type="submit" class="btn btn-primary">Registrar inscripción ✓</button>
+        </div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ENCUESTA (pública) -->
+  <section class="panel" id="encuesta">
+    <div class="card" style="max-width:620px;margin:0 auto">
+      <h2><span class="dot"></span>Encuesta de satisfacción</h2>
+      <p class="sub">Tu opinión ayuda a mejorar las jornadas de Mi Barrio, Mi Patrimonio. La encuesta es anónima: no pedimos ningún dato personal.</p>
+      <form id="encForm" novalidate>
+        <div class="field full" style="margin-bottom:18px">
+          <label>¿Qué tan satisfecho quedaste con la jornada? <span class="req">*</span></label>
+          <div class="estrellas" id="estrellas" role="radiogroup" aria-label="Calificación">
+            <button type="button" class="estrella" data-val="1" aria-label="1 estrella">★</button>
+            <button type="button" class="estrella" data-val="2" aria-label="2 estrellas">★</button>
+            <button type="button" class="estrella" data-val="3" aria-label="3 estrellas">★</button>
+            <button type="button" class="estrella" data-val="4" aria-label="4 estrellas">★</button>
+            <button type="button" class="estrella" data-val="5" aria-label="5 estrellas">★</button>
+            <span class="estrellas-txt" id="estrellasTxt">Toca una estrella</span>
+          </div>
+          <span class="err-msg" data-for="calificacion">Selecciona una calificación.</span>
+        </div>
+
+        <div class="field full" style="margin-bottom:18px">
+          <label>¿Recomendarías el programa a otra escuela? <span class="req">*</span></label>
+          <div class="segmento" id="recomendaria">
+            <button type="button" class="seg-btn" data-val="si">Sí, lo recomendaría</button>
+            <button type="button" class="seg-btn" data-val="no">No</button>
+          </div>
+          <span class="err-msg" data-for="recomendaria">Indica si lo recomendarías.</span>
+        </div>
+
+        <div class="field full">
+          <label>Comentario (opcional)</label>
+          <textarea id="comentario" rows="3" maxlength="500" placeholder="¿Qué te gustó? ¿Qué mejorarías?"
+            style="font-family:inherit;font-size:.9rem;padding:10px 12px;border:1.5px solid var(--linea);border-radius:9px;background:#fdfcf9;resize:vertical;width:100%"></textarea>
+          <span class="hint">Máx. 500 caracteres. No incluyas datos personales.</span>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Enviar encuesta</button>
+          <button type="reset" class="btn btn-ghost">Limpiar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- REGISTROS -->
+  <section class="panel" id="registros">
+    <div class="card">
+      <div class="toolbar">
+        <div>
+          <h2><span class="dot"></span>Expedientes registrados</h2>
+          <p class="sub" style="margin:0">Cada inscripción genera un folio y un expediente electrónico.</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" id="buscar" class="search" placeholder="Buscar escuela, CCT, sector…">
+          <button class="btn btn-ghost" id="exportar" style="padding:9px 18px;font-size:.85rem">Exportar CSV</button>
+        </div>
+      </div>
+      <div id="tablaContenedor"></div>
+    </div>
+  </section>
+
+  <!-- PANEL -->
+  <section class="panel" id="panel">
+    <div class="card">
+      <h2><span class="dot"></span>Panel de seguimiento</h2>
+      <p class="sub">Conteo en tiempo real de las inscripciones capturadas.</p>
+      <div class="stats">
+        <div class="stat"><div class="num" id="stEscuelas">0</div><div class="lbl">Escuelas inscritas</div></div>
+        <div class="stat"><div class="num" id="stNinos">0</div><div class="lbl">Niñas y niños estimados</div></div>
+        <div class="stat"><div class="num" id="stPublicas">0</div><div class="lbl">Públicas</div></div>
+        <div class="stat"><div class="num" id="stConcluidas">0</div><div class="lbl">Jornadas concluidas</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Cobertura del programa</h2>
+      <p class="sub">Avance de inscripción y conclusión sobre el padrón de escuelas primarias.</p>
+      <div id="cobertura"></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Expedientes por estado</h2>
+      <p class="sub">Distribución de los expedientes en el flujo de seguimiento.</p>
+      <div id="porEstado"></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Cobertura por barrio</h2>
+      <p class="sub">Barrio detectado automáticamente por la ubicación de la escuela en el mapa (delimitación aproximada del Centro Histórico).</p>
+      <div id="porBarrio"></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Satisfacción de las jornadas</h2>
+      <p class="sub">Resultados agregados de la encuesta pública (anónima).</p>
+      <div id="resumenEncuestas"></div>
+    </div>
+  </section>
+
+  <!-- BITÁCORA -->
+  <section class="panel" id="bitacora">
+    <div class="card">
+      <h2><span class="dot"></span>Bitácora de auditoría</h2>
+      <p class="sub">Registro inmutable de las acciones del gestor sobre los expedientes. Solo metadatos: nunca datos personales del ciudadano.</p>
+      <div id="bitacoraContenedor"></div>
+    </div>
+  </section>
+
+  <!-- MAPA -->
+  <section class="panel" id="mapa">
+    <div class="card">
+      <div class="mapa-toolbar">
+        <div>
+          <h2><span class="dot"></span>Mapa de escuelas primarias</h2>
+          <p class="sub" style="margin:0" id="mapaResumen">Cargando escuelas…</p>
+        </div>
+        <select id="filtroMapa" style="max-width:240px">
+          <option value="todas">Mostrar todas</option>
+          <option value="concluido">✓ Con plática concluida</option>
+          <option value="proceso">En proceso (aprobada/programada)</option>
+          <option value="solicitud">Solo en solicitud</option>
+          <option value="sin">Sin plática registrada</option>
+        </select>
+      </div>
+      <div class="leyenda">
+        <span><i style="background:#2E7D5B"></i> Plática concluida</span>
+        <span><i style="background:#E0A100"></i> En proceso</span>
+        <span><i style="background:#2E72C7"></i> En solicitud</span>
+        <span><i style="background:#9A938B"></i> Sin registro</span>
+      </div>
+      <div class="mapa-layout">
+        <div id="mapaEscuelas"></div>
+        <div id="infoEscuela">
+          <div class="info-placeholder">
+            <span class="big">◉</span>
+            Haz clic en una escuela del mapa para ver su información y el estado de su plática.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AVISO DE PRIVACIDAD INTEGRAL (LGPDPPSO Art. 21) -->
+  <section class="panel" id="aviso">
+    <div class="card legal">
+      <h2><span class="dot"></span>Aviso de Privacidad Integral</h2>
+      <p class="sub">Tratamiento de datos personales conforme a la Ley General de Protección de Datos Personales en Posesión de Sujetos Obligados (LGPDPPSO, DOF 20/03/2025).</p>
+
+      <h3>1. Responsable del tratamiento</h3>
+      <p>La <strong>Gerencia del Centro Histórico y Patrimonio Cultural del Honorable Ayuntamiento de Puebla</strong> es la responsable del tratamiento de los datos personales que usted proporcione. Domicilio: <mark>[domicilio oficial de la Gerencia — por completar]</mark>.</p>
+
+      <h3>2. Datos personales que se tratan</h3>
+      <p>Para las finalidades señaladas se recaban y tratan los siguientes datos:</p>
+      <ul>
+        <li><strong>De la institución educativa:</strong> nombre, Clave de Centro de Trabajo (CCT), tipo de sostenimiento, domicilio y sector o zona.</li>
+        <li><strong>De la persona enlace responsable:</strong> nombre, cargo, correo electrónico y teléfono.</li>
+        <li><strong>De la jornada:</strong> grados a inscribir, número de niñas y niños participantes (dato agregado, sin identificación individual) y fecha tentativa.</li>
+      </ul>
+      <p><strong>No se recaban datos personales sensibles.</strong> No se solicitan nombres ni datos de identificación individual de las niñas y niños participantes; únicamente un conteo por grupo.</p>
+
+      <h3>3. Fundamento legal</h3>
+      <p>El tratamiento se realiza con fundamento en los artículos 6º, apartado A, y 16, párrafo segundo, de la Constitución Política de los Estados Unidos Mexicanos; los artículos 10, 11, 12, 20 y 21 de la LGPDPPSO; <mark>[la Ley de Transparencia y la Ley de Protección de Datos Personales del Estado de Puebla, y el reglamento o las atribuciones que facultan a la Gerencia — por completar]</mark>.</p>
+
+      <h3>4. Finalidades del tratamiento</h3>
+      <p><strong>Finalidades primarias</strong> (necesarias para el trámite, no requieren consentimiento adicional):</p>
+      <ul>
+        <li>Gestionar la solicitud de inscripción y generar el folio y el expediente.</li>
+        <li>Dar seguimiento al estado del expediente (en solicitud, aprobado, programado y concluido).</li>
+        <li>Programar, ejecutar y dar seguimiento a las jornadas del programa "Mi Barrio, Mi Patrimonio".</li>
+        <li>Establecer comunicación con la persona enlace responsable de la institución.</li>
+      </ul>
+      <p><strong>Finalidades secundarias:</strong> no se realizan tratamientos para finalidades secundarias que requieran su consentimiento. La encuesta de satisfacción es <strong>anónima</strong> y no recaba datos personales.</p>
+
+      <h3>5. Medios para ejercer los derechos ARCO</h3>
+      <p>Usted puede ejercer sus derechos de <strong>Acceso, Rectificación, Cancelación y Oposición (ARCO)</strong>, así como revocar su consentimiento, presentando una solicitud ante la Unidad de Transparencia del Ayuntamiento —de forma presencial, por correo electrónico o a través de la Plataforma Nacional de Transparencia—, acreditando su identidad y, en su caso, su representación. El trámite es gratuito; sólo podrán cobrarse los costos de reproducción o envío, conforme a los artículos 42 a 50 de la LGPDPPSO.</p>
+
+      <h3>6. Unidad de Transparencia</h3>
+      <p>Domicilio: <mark>[domicilio de la Unidad de Transparencia del H. Ayuntamiento de Puebla — por completar]</mark>. Correo electrónico: <mark>[correo oficial — por completar]</mark>. Teléfono: <mark>[teléfono — por completar]</mark>.</p>
+
+      <h3>7. Transferencias de datos personales</h3>
+      <p>Sus datos personales <strong>no serán transferidos</strong> a terceros, salvo las transferencias que no requieren su consentimiento conforme al artículo 16 de la LGPDPPSO (por ejemplo, por mandato fundado y motivado de autoridad competente, o para el ejercicio de facultades análogas entre autoridades). En esos supuestos no se requiere consentimiento adicional.</p>
+
+      <h3>8. Mecanismo para manifestar su negativa</h3>
+      <p>Respecto de las finalidades o transferencias que requieran su consentimiento, usted puede manifestar su negativa antes de enviar el formulario absteniéndose de otorgar el consentimiento, o posteriormente mediante una solicitud a la Unidad de Transparencia. La negativa a las finalidades primarias puede impedir la gestión de la inscripción.</p>
+
+      <h3>9. Conservación de los datos</h3>
+      <p>Los datos se conservarán únicamente por el tiempo necesario para cumplir las finalidades y los plazos que establezca el catálogo de disposición documental aplicable; una vez concluidos, serán bloqueados y suprimidos conforme a los artículos 17 y 18 de la LGPDPPSO.</p>
+
+      <h3>10. Cambios al aviso de privacidad</h3>
+      <p>Cualquier modificación a este aviso se hará de su conocimiento a través de este portal, en esta misma sección.</p>
+
+      <p class="legal-fecha">Última actualización: <mark>[fecha — por completar]</mark>.</p>
+      <div class="paso-nav">
+        <button type="button" class="btn btn-ghost" data-goto="inicio">← Volver al inicio</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  Prototipo del Modelo de Optimización Administrativa · Reto de transformación pública hacia Gobierno Abierto<br>
+  Los datos se resguardan en la base de datos institucional del SGI (acceso restringido, conforme al aviso de privacidad).<br>
+  <button type="button" class="link-aviso" data-goto="aviso">Aviso de privacidad integral</button>
+</footer>
+
+<div class="toast" id="toast">Inscripción registrada</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  // --- Cliente del SGI: habla con la API; ya NO usa localStorage ---
+  const API = '';
+  let registros = []; // cache en memoria para tabla y exportación
+  let esGestor = false; // estado de sesión en el cliente
+
+  async function pedir(path, opts){
+    // same-origin envía la cookie de sesión httpOnly automáticamente.
+    const r = await fetch(API + path, Object.assign({credentials:'same-origin'}, opts));
+    // Si una ruta protegida nos rechaza, la sesión caducó: volvemos a modo público.
+    if(r.status===401 && esGestor){
+      aplicarRol(false);
+      mostrarToast('Tu sesión expiró. Inicia sesión de nuevo.', true);
+    }
+    return r;
+  }
+
+  // Navegación entre pestañas (la usan tanto los tabs como las tarjetas del hub)
+  function activarTab(nombre){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===nombre));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active', x.id===nombre));
+    if(nombre==='inicio') renderInicio();
+    if(nombre==='form') cargarCatalogoInsc();
+    if(nombre==='registros') renderTabla(document.getElementById('buscar').value);
+    if(nombre==='panel'){ renderPanel(); renderResumenEncuestas(); }
+    if(nombre==='bitacora') renderBitacora();
+    if(nombre==='mapa') renderMapa();
+  }
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>activarTab(t.dataset.tab));
+  });
+
+  // Cualquier elemento con data-goto navega a esa sección
+  // (tarjetas del hub, botón de cancelar del login, etc.)
+  document.querySelectorAll('[data-goto]').forEach(c=>{
+    c.addEventListener('click', ()=>activarTab(c.dataset.goto));
+  });
+
+  // --- Sesión y roles ---
+  // El gestor ve Registros y Panel; el público solo Inicio y Nueva inscripción.
+  // Alternamos la visibilidad de los elementos .gestor-only / .publico-only.
+  function aplicarRol(gestor){
+    esGestor = gestor;
+    document.querySelectorAll('.gestor-only').forEach(el=>{ el.hidden = !gestor; });
+    document.querySelectorAll('.publico-only').forEach(el=>{ el.hidden = gestor; });
+    document.getElementById('btnAcceso').hidden = gestor;
+    document.getElementById('authUser').hidden = !gestor;
+    // Si dejamos de ser gestor estando en una sección restringida, volvemos al inicio.
+    const activa = document.querySelector('.panel.active');
+    if(!gestor && activa && ['registros','panel','bitacora','mapa'].includes(activa.id)){
+      activarTab('inicio');
+    }
+  }
+
+  async function checkAuth(){
+    try{
+      const r = await fetch(API + '/api/me', {credentials:'same-origin'});
+      const d = await r.json();
+      if(d.autenticado){
+        document.getElementById('authNombre').textContent = d.usuario;
+        aplicarRol(true);
+      } else {
+        aplicarRol(false);
+      }
+    }catch(err){ aplicarRol(false); }
+  }
+
+  // Login
+  document.getElementById('loginForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const errEl = document.getElementById('loginErr');
+    errEl.classList.remove('show');
+    const usuario = document.getElementById('lgUsuario').value.trim();
+    const password = document.getElementById('lgPassword').value;
+    try{
+      const r = await fetch(API + '/api/login', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        credentials:'same-origin',
+        body: JSON.stringify({usuario, password})
+      });
+      if(r.ok){
+        const d = await r.json();
+        document.getElementById('authNombre').textContent = d.usuario;
+        document.getElementById('loginForm').reset();
+        aplicarRol(true);
+        activarTab('registros');
+        mostrarToast('Sesión iniciada como gestor');
+      } else {
+        errEl.classList.add('show');
+      }
+    }catch(err){ mostrarToast('Error de conexión con el servidor', true); }
+  });
+
+  // Logout
+  document.getElementById('btnSalir').addEventListener('click', async ()=>{
+    try{ await fetch(API + '/api/logout', {method:'POST', credentials:'same-origin'}); }
+    catch(err){ /* sin conexión: limpiamos el estado igualmente */ }
+    aplicarRol(false);
+    activarTab('inicio');
+    mostrarToast('Sesión cerrada');
+  });
+
+  // Botón "Acceso gestor" del encabezado → pantalla de login
+  document.getElementById('btnAcceso').addEventListener('click', ()=>activarTab('acceso'));
+
+  // Resumen en vivo del hub (reusa el endpoint del panel, que es del gestor)
+  async function renderInicio(){
+    if(!esGestor) return; // el público no ve las cifras agregadas
+    try{
+      const r = await pedir('/api/panel');
+      if(!r.ok) return;
+      const p = await r.json();
+      document.getElementById('hsEscuelas').textContent = p.escuelas;
+      document.getElementById('hsNinos').textContent = p.ninos;
+      document.getElementById('hsConcluidas').textContent = p.concluidas;
+    }catch(err){ /* si no hay conexión, se quedan los guiones */ }
+  }
+
+  // Validación de cliente (UX inmediata; el servidor es la autoridad final)
+  function marcar(id, ok){
+    const el = document.getElementById(id);
+    const msg = document.querySelector(`.err-msg[data-for="${id}"]`);
+    if(ok){ el.classList.remove('invalid'); if(msg) msg.classList.remove('show'); }
+    else { el.classList.add('invalid'); if(msg) msg.classList.add('show'); }
+    return ok;
+  }
+
+  // Valida UN campo según su regla y lo marca. Permite validar por paso.
+  function validarCampo(id){
+    const el = document.getElementById(id);
+    let ok;
+    switch(id){
+      case 'cct':      ok = el.value.trim().length>=8; break;
+      case 'correo':   ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()); break;
+      case 'telefono': ok = /^\d{10}$/.test(el.value.trim()); break;
+      case 'ninos':    { const n = parseInt(el.value,10); ok = n>=1 && n<=40; break; }
+      case 'consent':  ok = el.checked; break;
+      default:         ok = el.value.trim() !== '';
+    }
+    return marcar(id, ok);
+  }
+
+  // Campos obligatorios de cada paso del formulario.
+  const CAMPOS_PASO = {
+    1: ['nombre','sostenimiento','cct','domicilio'],
+    2: ['enlace','correo','telefono'],
+    3: ['grados','ninos','consent'],
+  };
+
+  function validarPaso(n){
+    let v = true;
+    (CAMPOS_PASO[n]||[]).forEach(id=>{ if(!validarCampo(id)) v=false; });
+    return v;
+  }
+
+  // Validación completa (todos los pasos) antes de enviar.
+  function validar(){
+    return [1,2,3].every(n=>validarPaso(n));
+  }
+
+  // --- Autocompletado desde el padrón de escuelas (catálogo público) ---
+  let catalogoInsc = [];                 // catálogo recibido del servidor
+  const catalogoPorNombre = new Map();   // nombre exacto -> escuela
+  const catalogoNorm = new Map();        // nombre normalizado -> escuela
+  let nombreBloqueado = false;           // escuela elegida ya concluyó
+  const CAMPOS_AUTO = ['sostenimiento','domicilio','telefono','correo','barrio'];
+
+  // Misma normalización que el servidor (normalizar-escuela.ts): debe coincidir.
+  function normEsc(s){
+    return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .replace(/[^a-z0-9ñ\s]/g,' ')
+      .replace(/\b(escuela|primaria|esc|prim|colegio|instituto|plantel|particular|oficial|federal|estatal|centro|escolar)\b/g,' ')
+      .replace(/\s+/g,' ').trim();
+  }
+
+  async function cargarCatalogoInsc(){
+    if(catalogoInsc.length) return;      // se carga una sola vez
+    try{
+      const r = await fetch(API + '/api/catalogo', {credentials:'same-origin'});
+      if(!r.ok) return;
+      catalogoInsc = await r.json();
+    }catch(err){ return; }
+    document.getElementById('listaEscuelas').innerHTML =
+      catalogoInsc.map(e=>`<option value="${esc(e.nombre)}"></option>`).join('');
+    catalogoInsc.forEach(e=>{
+      catalogoPorNombre.set(e.nombre, e);
+      const k = normEsc(e.nombre);
+      if(k && !catalogoNorm.has(k)) catalogoNorm.set(k, e);
+    });
+  }
+
+  function escuelaDe(valor){
+    return catalogoPorNombre.get(valor) || catalogoNorm.get(normEsc(valor)) || null;
+  }
+
+  function llenarCampo(id, valor){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.value = valor || '';
+    el.closest('.field')?.classList.toggle('autollenado', !!valor);
+  }
+
+  function limpiarAuto(){
+    CAMPOS_AUTO.forEach(id=>document.getElementById(id)?.closest('.field')?.classList.remove('autollenado'));
+  }
+
+  function aplicarBloqueo(bloq){
+    nombreBloqueado = bloq;
+    document.getElementById('nombreBloqueo').hidden = !bloq;
+    document.getElementById('nombre').classList.toggle('invalid', bloq);
+    // Con el formulario por pasos, el bloqueo deshabilita avanzar y enviar:
+    // si la escuela ya concluyó, no se puede pasar del paso 1.
+    document.querySelectorAll('#inscForm .btn-next, #inscForm button[type="submit"]')
+      .forEach(b=>{ b.disabled = bloq; });
+  }
+
+  // --- Navegación del formulario por pasos (wizard) ---
+  let pasoActual = 1;
+  const TOTAL_PASOS = 3;
+
+  function mostrarPaso(n){
+    pasoActual = n;
+    document.querySelectorAll('#inscForm .form-paso').forEach(p=>{
+      p.hidden = (parseInt(p.dataset.paso,10) !== n);
+    });
+    document.querySelectorAll('#stepper .step-item').forEach(s=>{
+      const sn = parseInt(s.dataset.step,10);
+      s.classList.toggle('on', sn===n);
+      s.classList.toggle('done', sn<n);
+    });
+    document.getElementById('inscForm').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  document.querySelectorAll('#inscForm .btn-next').forEach(b=>b.addEventListener('click', ()=>{
+    if(pasoActual===1 && nombreBloqueado){ document.getElementById('nombreBloqueo').hidden=false; return; }
+    if(!validarPaso(pasoActual)){ mostrarToast('Revisa los campos marcados', true); return; }
+    mostrarPaso(Math.min(pasoActual+1, TOTAL_PASOS));
+  }));
+
+  document.querySelectorAll('#inscForm .btn-prev').forEach(b=>b.addEventListener('click', ()=>{
+    mostrarPaso(Math.max(pasoActual-1, 1));
+  }));
+
+  // Click en un paso ya completado del stepper: permite retroceder a revisar.
+  document.querySelectorAll('#stepper .step-item').forEach(s=>s.addEventListener('click', ()=>{
+    const n = parseInt(s.dataset.step,10);
+    if(n < pasoActual) mostrarPaso(n);
+  }));
+
+  document.getElementById('nombre').addEventListener('input', e=>{
+    const escuela = escuelaDe(e.target.value.trim());
+    if(escuela){
+      if(escuela.sostenimiento==='Pública'||escuela.sostenimiento==='Privada') llenarCampo('sostenimiento', escuela.sostenimiento);
+      llenarCampo('domicilio', escuela.domicilio);
+      llenarCampo('telefono', escuela.telefono);
+      if(escuela.correo) llenarCampo('correo', escuela.correo);
+      llenarCampo('barrio', escuela.barrio || '');
+      aplicarBloqueo(!!escuela.yaConcluida);
+    } else {
+      limpiarAuto();
+      aplicarBloqueo(false);
+    }
+  });
+
+  // Al limpiar el formulario, se quitan marcas de autollenado y el bloqueo,
+  // y se regresa al primer paso. (setTimeout: el reset nativo limpia primero.)
+  document.getElementById('inscForm').addEventListener('reset', ()=>{
+    limpiarAuto(); aplicarBloqueo(false);
+    setTimeout(()=>mostrarPaso(1), 0);
+  });
+
+  document.getElementById('inscForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    if(nombreBloqueado){ document.getElementById('nombreBloqueo').hidden=false; mostrarToast('Esta escuela ya concluyó su jornada', true); return; }
+    document.querySelector('.err-msg[data-for="cct"]').textContent='CCT obligatorio (mín. 8 caracteres).';
+    if(!validar()) return;
+
+    const payload = {
+      nombre: document.getElementById('nombre').value.trim(),
+      sostenimiento: document.getElementById('sostenimiento').value,
+      cct: document.getElementById('cct').value.trim().toUpperCase(),
+      domicilio: document.getElementById('domicilio').value.trim(),
+      grados: document.getElementById('grados').value.trim(),
+      enlace: document.getElementById('enlace').value.trim(),
+      cargo: document.getElementById('cargo').value.trim(),
+      correo: document.getElementById('correo').value.trim(),
+      telefono: document.getElementById('telefono').value.trim(),
+      ninos: parseInt(document.getElementById('ninos').value,10),
+      fecha: document.getElementById('fecha').value,
+      hora: document.getElementById('hora').value,
+      barrio: document.getElementById('barrio').value,
+      consent: document.getElementById('consent').checked
+    };
+
+    try{
+      const r = await pedir('/api/inscripciones', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      if(r.status===201){
+        const insc = await r.json();
+        e.target.reset();
+        mostrarToast(`Expediente ${insc.folio} creado`);
+      } else if(r.status===409){
+        const data = await r.json().catch(()=>({}));
+        if(data.error==='ESCUELA_CONCLUIDA'){
+          // El servidor confirma el bloqueo aunque el frontend no lo detectara.
+          aplicarBloqueo(true);
+          mostrarToast('Esta escuela ya concluyó su jornada', true);
+        } else {
+          marcar('cct', false);
+          const m = document.querySelector('.err-msg[data-for="cct"]');
+          m.textContent = 'Esta escuela (CCT) ya está inscrita.';
+          m.classList.add('show');
+        }
+      } else if(r.status===422){
+        const data = await r.json();
+        (data.campos||[]).forEach(c=>{
+          const el = document.getElementById(c.campo);
+          const m = document.querySelector(`.err-msg[data-for="${c.campo}"]`);
+          if(m){ m.textContent = c.motivo; m.classList.add('show'); }
+          if(el) el.classList.add('invalid');
+        });
+        mostrarToast('Revisa los campos marcados', true);
+      } else {
+        mostrarToast('No se pudo registrar la inscripción', true);
+      }
+    }catch(err){
+      mostrarToast('Error de conexión con el servidor', true);
+    }
+  });
+
+  function mostrarToast(txt, esError){
+    const t = document.getElementById('toast');
+    t.textContent = txt;
+    t.classList.toggle('error', !!esError);
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 3000);
+  }
+
+  // Tabla (datos vienen del servidor; el filtro lo aplica la API)
+  async function renderTabla(filtro=''){
+    const cont = document.getElementById('tablaContenedor');
+    cont.innerHTML = '<div class="empty">Cargando…</div>';
+    try{
+      const qs = filtro && filtro.trim()!=='' ? `?q=${encodeURIComponent(filtro.trim())}` : '';
+      const r = await pedir('/api/inscripciones'+qs);
+      registros = await r.json();
+    }catch(err){
+      cont.innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>';
+      return;
+    }
+
+    if(registros.length===0){
+      cont.innerHTML = `<div class="empty"><div class="big">▦</div>
+        ${filtro&&filtro.trim()!==''?'Sin resultados para la búsqueda.':'Aún no hay inscripciones capturadas.'}</div>`;
+      return;
+    }
+
+    const estados = ['En solicitud','Aprobado','Programado','Concluido'];
+    const clases = ['solicitud','aprobado','programado','concluido'];
+
+    let html = `<div class="table-wrap"><table><thead><tr>
+      <th>Folio</th><th>Institución</th><th>Tipo</th><th>CCT</th>
+      <th>Sector</th><th>Grados</th><th>Niños</th><th>Enlace</th><th>Estado</th><th>Avanzar</th><th></th>
+    </tr></thead><tbody>`;
+    registros.forEach((r)=>{
+      const badge = r.sostenimiento==='Pública'?'badge-pub':'badge-priv';
+      const pos = estados.indexOf(r.estado);
+      const claseEstado = clases[pos>=0?pos:0];
+      const esUltimo = pos>=estados.length-1;
+      const siguiente = esUltimo ? '' : estados[pos+1];
+      html += `<tr>
+        <td><span class="folio">${esc(r.folio)}</span></td>
+        <td>${esc(r.nombre)}</td>
+        <td><span class="${badge}">${esc(r.sostenimiento)}</span></td>
+        <td>${esc(r.cct)}</td>
+        <td>${esc(r.sector)}</td>
+        <td>${esc(r.grados)}</td>
+        <td style="text-align:center">${r.ninos}</td>
+        <td>${esc(r.enlace)}<br><span style="color:var(--gris);font-size:.72rem">${esc(r.correo)}</span></td>
+        <td><span class="estado ${claseEstado}">${esc(r.estado)}</span></td>
+        <td><button class="avanzar" data-id="${r.id}" ${esUltimo?'disabled':''} title="${esUltimo?'Ciclo completo':'Avanzar a: '+siguiente}">${esUltimo?'✓ Completo':'→ '+siguiente}</button></td>
+        <td><button class="del" data-id="${r.id}" title="Eliminar">✕</button></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+    cont.innerHTML = html;
+
+    cont.querySelectorAll('.avanzar').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        b.disabled = true;
+        try{
+          const r = await pedir(`/api/inscripciones/${b.dataset.id}/avanzar`, {method:'POST'});
+          if(r.ok){
+            const insc = await r.json();
+            mostrarToast(`${insc.folio} → ${insc.estado}`);
+          } else {
+            const d = await r.json().catch(()=>({}));
+            mostrarToast(d.mensaje || 'No se pudo avanzar', true);
+          }
+        }catch(err){ mostrarToast('Error de conexión', true); }
+        renderTabla(document.getElementById('buscar').value);
+      });
+    });
+    cont.querySelectorAll('.del').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        if(!confirm('¿Eliminar este expediente?')) return;
+        try{
+          const r = await pedir(`/api/inscripciones/${b.dataset.id}`, {method:'DELETE'});
+          if(!r.ok){ const d = await r.json().catch(()=>({})); mostrarToast(d.mensaje||'No se pudo eliminar', true); }
+        }catch(err){ mostrarToast('Error de conexión', true); }
+        renderTabla(document.getElementById('buscar').value);
+      });
+    });
+  }
+
+  // Escapa HTML para evitar inyección al renderizar datos capturados
+  function esc(s){
+    return String(s??'').replace(/[&<>"']/g, c=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  let debounce;
+  document.getElementById('buscar').addEventListener('input', e=>{
+    clearTimeout(debounce);
+    const val = e.target.value;
+    debounce = setTimeout(()=>renderTabla(val), 250);
+  });
+
+  // Exportar CSV (descarga lo que hay en el servidor)
+  document.getElementById('exportar').addEventListener('click', async ()=>{
+    let datos = [];
+    try{
+      const r = await pedir('/api/inscripciones');
+      datos = await r.json();
+    }catch(err){ mostrarToast('Error al exportar', true); return; }
+    if(datos.length===0){ mostrarToast('No hay datos para exportar', true); return; }
+    const cols = ['folio','nombre','sostenimiento','cct','domicilio','sector','grados','enlace','cargo','correo','telefono','ninos','fecha','estado'];
+    const csv = [cols.join(',')].concat(
+      datos.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))
+    ).join('\n');
+    const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'inscripciones_mbmp.csv';
+    a.click();
+  });
+
+  // Panel (estadísticas calculadas en el servidor)
+  const ESTADO_COLOR = {'En solicitud':'#2E72C7','Aprobado':'#E0A100','Programado':'#6B4FAE','Concluido':'#2E7D5B'};
+
+  async function renderPanel(){
+    let p;
+    try{
+      const r = await pedir('/api/panel');
+      p = await r.json();
+    }catch(err){
+      document.getElementById('cobertura').innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>';
+      return;
+    }
+    document.getElementById('stEscuelas').textContent = p.escuelas;
+    document.getElementById('stNinos').textContent = p.ninos;
+    document.getElementById('stPublicas').textContent = p.publicas;
+    document.getElementById('stConcluidas').textContent = p.concluidas;
+
+    // --- Cobertura: inscritas vs padrón, y concluidas vs inscritas ---
+    const totalCat = p.totalCatalogo || 0;
+    const pctInsc = totalCat ? p.escuelas/totalCat*100 : 0;
+    const pctConc = p.escuelas ? p.concluidas/p.escuelas*100 : 0;
+    document.getElementById('cobertura').innerHTML = `
+      <div class="barra-row">
+        <div class="barra-top"><span class="lbl">Escuelas inscritas</span>
+          <span class="val"><strong>${p.escuelas}</strong> de ${totalCat} · ${pctInsc.toFixed(1)}%</span></div>
+        <div class="barra-track"><div class="barra-fill" style="width:${pctInsc}%"></div></div>
+        <div class="barra-sub">Cobertura sobre el padrón de escuelas primarias.</div>
+      </div>
+      <div class="barra-row">
+        <div class="barra-top"><span class="lbl">Jornadas concluidas</span>
+          <span class="val"><strong>${p.concluidas}</strong> de ${p.escuelas} inscritas · ${pctConc.toFixed(0)}%</span></div>
+        <div class="barra-track"><div class="barra-fill verde" style="width:${pctConc}%"></div></div>
+      </div>`;
+
+    // --- Expedientes por estado ---
+    const maxE = Math.max(1, ...p.porEstado.map(e=>e.total));
+    document.getElementById('porEstado').innerHTML = p.porEstado.map(e=>{
+      const col = ESTADO_COLOR[e.estado] || '#999';
+      return `<div class="barra-row">
+        <div class="barra-top">
+          <span class="lbl"><span class="estado-dot" style="background:${col}"></span>${esc(e.estado)}</span>
+          <span class="val"><strong>${e.total}</strong></span></div>
+        <div class="barra-track"><div class="barra-fill" style="width:${e.total/maxE*100}%;background:${col}"></div></div>
+      </div>`;
+    }).join('');
+
+    // --- Cobertura por barrio (barra apilada: concluidas en verde) ---
+    const cb = document.getElementById('porBarrio');
+    if(!p.porBarrio || p.porBarrio.length===0){
+      cb.innerHTML = '<div class="empty">Sin inscripciones todavía.</div>';
+    } else {
+      const maxB = Math.max(1, ...p.porBarrio.map(b=>b.inscritas));
+      cb.innerHTML = p.porBarrio.map(b=>`
+        <div class="barra-row">
+          <div class="barra-top"><span class="lbl">${esc(b.barrio)}</span>
+            <span class="val"><strong>${b.inscritas}</strong> inscritas · ${b.concluidas} concluidas</span></div>
+          <div class="barra-track">
+            <div class="barra-fill" style="width:${b.inscritas/maxB*100}%"></div>
+            <div class="barra-fill verde" style="position:absolute;left:0;top:0;width:${b.concluidas/maxB*100}%"></div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // Bitácora de auditoría (solo gestor)
+  const ACCION_META = {
+    AVANZAR_ESTADO: { clase:'avanzar', ico:'→', texto:'Avanzó el estado' },
+    ELIMINAR:       { clase:'eliminar', ico:'✕', texto:'Eliminó el expediente' }
+  };
+
+  async function renderBitacora(){
+    const cont = document.getElementById('bitacoraContenedor');
+    cont.innerHTML = '<div class="empty">Cargando…</div>';
+    let eventos;
+    try{
+      const r = await pedir('/api/bitacora');
+      if(!r.ok){ cont.innerHTML = '<div class="empty">No se pudo cargar la bitácora.</div>'; return; }
+      eventos = await r.json();
+    }catch(err){
+      cont.innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>';
+      return;
+    }
+    if(!eventos || eventos.length===0){
+      cont.innerHTML = '<div class="empty"><div class="big">≡</div>Aún no hay acciones registradas.</div>';
+      return;
+    }
+    let html = '';
+    eventos.forEach(ev=>{
+      const meta = ACCION_META[ev.accion] || { clase:'avanzar', ico:'•', texto: ev.accion };
+      const f = new Date(ev.createdAt);
+      const fecha = isNaN(f) ? '' : f.toLocaleString('es-MX', {dateStyle:'medium', timeStyle:'short'});
+      html += `<div class="bita-item">
+        <div class="bita-ico ${meta.clase}">${meta.ico}</div>
+        <div class="bita-body">
+          <div class="bita-top">
+            <span class="bita-accion">${esc(meta.texto)} · <span class="bita-folio">${esc(ev.folio)}</span></span>
+            <span class="bita-fecha">${esc(fecha)}</span>
+          </div>
+          <div class="bita-detalle">${esc(ev.detalle)} · <span class="bita-actor">${esc(ev.actor)}</span></div>
+        </div>
+      </div>`;
+    });
+    cont.innerHTML = html;
+  }
+
+  // --- Mapa de escuelas (Leaflet + OpenStreetMap, sin API key) ---
+  let mapa, capaEscuelas, escuelasCache = [], mapaCargado = false;
+  const COLORES = {
+    'Concluido':'#2E7D5B', 'Programado':'#E0A100', 'Aprobado':'#E0A100', 'En solicitud':'#2E72C7'
+  };
+  function colorDe(estado){ return COLORES[estado] || '#9A938B'; }
+
+  async function renderMapa(){
+    if(!mapa){
+      mapa = L.map('mapaEscuelas').setView([19.04, -98.19], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; colaboradores de OpenStreetMap'
+      }).addTo(mapa);
+      capaEscuelas = L.layerGroup().addTo(mapa);
+    }
+    if(!mapaCargado){
+      try{
+        const r = await pedir('/api/escuelas');
+        if(!r.ok){ document.getElementById('mapaResumen').textContent = 'No se pudieron cargar las escuelas.'; return; }
+        escuelasCache = await r.json();
+        mapaCargado = true;
+      }catch(err){
+        document.getElementById('mapaResumen').textContent = 'No se pudo conectar con el servidor.';
+        return;
+      }
+    }
+    aplicarFiltroMapa();
+    setTimeout(()=>mapa.invalidateSize(), 120); // el contenedor estaba oculto
+  }
+
+  function aplicarFiltroMapa(){
+    const f = document.getElementById('filtroMapa').value;
+    let lista = escuelasCache;
+    if(f==='concluido')      lista = escuelasCache.filter(e=>e.estadoPlatica==='Concluido');
+    else if(f==='proceso')   lista = escuelasCache.filter(e=>e.estadoPlatica==='Aprobado'||e.estadoPlatica==='Programado');
+    else if(f==='solicitud') lista = escuelasCache.filter(e=>e.estadoPlatica==='En solicitud');
+    else if(f==='sin')       lista = escuelasCache.filter(e=>!e.estadoPlatica);
+    dibujarMarcadores(lista);
+  }
+
+  function dibujarMarcadores(lista){
+    capaEscuelas.clearLayers();
+    const concluidas = escuelasCache.filter(e=>e.estadoPlatica==='Concluido').length;
+    lista.forEach(e=>{
+      L.circleMarker([e.lat, e.lng], {
+        radius:7, color:'#fff', weight:1.5, fillColor: colorDe(e.estadoPlatica), fillOpacity:.92
+      }).on('click', ()=>mostrarInfoEscuela(e)).addTo(capaEscuelas);
+    });
+    document.getElementById('mapaResumen').textContent =
+      `Mostrando ${lista.length} de ${escuelasCache.length} escuelas · ${concluidas} con plática concluida`;
+  }
+
+  function mostrarInfoEscuela(e){
+    const estado = e.estadoPlatica;
+    const etiqueta = estado==='Concluido' ? '✓ Plática concluida'
+                   : estado ? '● '+esc(estado) : '○ Sin plática registrada';
+    document.getElementById('infoEscuela').innerHTML = `
+      <h3>${esc(e.nombre)}</h3>
+      <div class="info-estado" style="background:${colorDe(estado)}">${etiqueta}</div>
+      <p class="info-row"><strong>Tipo:</strong> ${esc(e.sostenimiento)}</p>
+      <p class="info-row"><strong>Dirección:</strong> ${esc(e.domicilio)||'—'}</p>
+      ${e.telefono?`<p class="info-row"><strong>Teléfono:</strong> ${esc(e.telefono)}</p>`:''}
+      ${e.correo?`<p class="info-row"><strong>Correo:</strong> ${esc(e.correo)}</p>`:''}
+      ${estado?`<hr>
+        <p class="info-row"><strong>Folio:</strong> <span class="folio">${esc(e.folio)}</span></p>
+        ${e.fecha?`<p class="info-row"><strong>Fecha de la jornada:</strong> ${esc(e.fecha)}${e.hora?` · ${esc(e.hora)} h`:''}</p>`:''}
+        ${e.ninos!=null?`<p class="info-row"><strong>Niñas y niños:</strong> ${e.ninos}</p>`:''}
+        ${e.enlace?`<p class="info-row"><strong>Enlace responsable:</strong> ${esc(e.enlace)}</p>`:''}`
+      :`<hr><p class="info-row">Esta escuela aún no está inscrita en el sistema.</p>`}
+    `;
+  }
+
+  document.getElementById('filtroMapa').addEventListener('change', aplicarFiltroMapa);
+
+  // --- Encuesta de satisfacción (pública) ---
+  const estrellas = document.querySelectorAll('#estrellas .estrella');
+  const estrellasTxt = document.getElementById('estrellasTxt');
+  const TXT_CALIF = {1:'Muy insatisfecho',2:'Insatisfecho',3:'Neutral',4:'Satisfecho',5:'Muy satisfecho'};
+  let encCalif = 0;
+  let encRecom = null;
+
+  function errEnc(campo, mostrar){
+    const m = document.querySelector(`.err-msg[data-for="${campo}"]`);
+    if(m) m.classList.toggle('show', mostrar);
+  }
+  function pintarEstrellas(n){
+    estrellas.forEach(e=>e.classList.toggle('on', Number(e.dataset.val)<=n));
+  }
+  estrellas.forEach(e=>{
+    const v = Number(e.dataset.val);
+    e.addEventListener('mouseenter', ()=>pintarEstrellas(v));
+    e.addEventListener('mouseleave', ()=>pintarEstrellas(encCalif));
+    e.addEventListener('click', ()=>{
+      encCalif = v;
+      pintarEstrellas(v);
+      estrellasTxt.textContent = TXT_CALIF[v];
+      errEnc('calificacion', false);
+    });
+  });
+  document.querySelectorAll('#recomendaria .seg-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      encRecom = b.dataset.val==='si';
+      document.querySelectorAll('#recomendaria .seg-btn').forEach(x=>x.classList.toggle('on', x===b));
+      errEnc('recomendaria', false);
+    });
+  });
+
+  function resetEncuesta(){
+    encCalif = 0; encRecom = null;
+    pintarEstrellas(0);
+    estrellasTxt.textContent = 'Toca una estrella';
+    document.querySelectorAll('#recomendaria .seg-btn').forEach(x=>x.classList.remove('on'));
+  }
+
+  document.getElementById('encForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    let ok = true;
+    if(encCalif<1){ errEnc('calificacion', true); ok=false; }
+    if(encRecom===null){ errEnc('recomendaria', true); ok=false; }
+    if(!ok) return;
+    const payload = {
+      calificacion: encCalif,
+      recomendaria: encRecom,
+      comentario: document.getElementById('comentario').value.trim()
+    };
+    try{
+      const r = await pedir('/api/encuestas', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(r.status===201){
+        e.target.reset();
+        resetEncuesta();
+        mostrarToast('¡Gracias por tu opinión!');
+      } else {
+        mostrarToast('No se pudo enviar la encuesta', true);
+      }
+    }catch(err){ mostrarToast('Error de conexión con el servidor', true); }
+  });
+  document.getElementById('encForm').addEventListener('reset', resetEncuesta);
+
+  // Resumen de la encuesta (gestor, dentro del Panel)
+  async function renderResumenEncuestas(){
+    const cont = document.getElementById('resumenEncuestas');
+    let s;
+    try{
+      const r = await pedir('/api/encuestas/resumen');
+      if(!r.ok){ cont.innerHTML = '<div class="empty">No se pudo cargar el resumen.</div>'; return; }
+      s = await r.json();
+    }catch(err){ cont.innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>'; return; }
+    if(s.total===0){ cont.innerHTML = '<div class="empty">Aún no hay respuestas de la encuesta.</div>'; return; }
+    let html = `<div class="enc-top">
+      <div class="enc-big"><div class="n">${s.promedio}<small>/5</small></div><div class="l">Promedio</div></div>
+      <div class="enc-big"><div class="n">${s.total}</div><div class="l">Respuestas</div></div>
+      <div class="enc-big"><div class="n">${s.porcentajeRecomienda}<small>%</small></div><div class="l">Recomendaría</div></div>
+    </div>`;
+    const max = Math.max(...s.distribucion, 1);
+    for(let k=5;k>=1;k--){
+      const c = s.distribucion[k-1]||0;
+      html += `<div class="enc-bar-row">
+        <span class="star">${k} ★</span>
+        <span class="enc-bar-track"><span class="enc-bar-fill" style="width:${c/max*100}%"></span></span>
+        <span class="cnt">${c}</span>
+      </div>`;
+    }
+    if(s.comentarios && s.comentarios.length){
+      html += '<div style="margin-top:16px;font-size:.82rem;font-weight:700;color:var(--vino)">Comentarios recientes</div>';
+      s.comentarios.slice(0,5).forEach(co=>{
+        html += `<div class="enc-coment"><div class="m">${'★'.repeat(co.calificacion)}</div><div class="c">${esc(co.comentario)}</div></div>`;
+      });
+    }
+    cont.innerHTML = html;
+  }
+
+  // Init: verifica si hay sesión activa y luego pinta el hub de inicio.
+  // El padrón de escuelas se precarga para que el autocompletado esté listo.
+  checkAuth().then(renderInicio);
+  cargarCatalogoInsc();
+
+  // Sombra sutil bajo la barra de navegación fija al hacer scroll.
+  window.addEventListener('scroll', ()=>{
+    document.querySelector('.tabs')?.classList.toggle('scrolled', window.scrollY>10);
+  }, {passive:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.log
+
+# Bases de datos locales (SQLite) — nunca al repo
+*.sqlite
+*.sqlite3
+*.db
+local.db*
+
+# Variables de entorno reales (sólo .env.example va al repo)
+.env
+.env.local
+
+.DS_Store
