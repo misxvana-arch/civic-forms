@@ -45,8 +45,10 @@ export type EventoBitacoraRow = typeof bitacora.$inferSelect;
 // No hay llave foránea a una persona: por diseño no guarda datos personales.
 export const encuestas = sqliteTable("encuestas", {
   id: text("id").primaryKey(),
-  prestador: text("prestador").notNull().default(""),
-  escuela: text("escuela").notNull().default(""),
+  // Nullable a propósito: así `db:push` las agrega a una tabla ya existente
+  // sin pedir confirmación interactiva (clave para el deploy automático).
+  prestador: text("prestador"),
+  escuela: text("escuela"),
   calificacion: integer("calificacion").notNull(),
   puntualidad: integer("puntualidad"),
   calidadTaller: integer("calidad_taller"),

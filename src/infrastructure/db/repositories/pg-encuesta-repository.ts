@@ -7,8 +7,8 @@ import { type EncuestaRepository } from "../../../application/ports/encuesta-rep
 function aDominio(row: EncuestaRow): Encuesta {
   return {
     id: row.id,
-    prestador: row.prestador,
-    escuela: row.escuela,
+    prestador: row.prestador ?? "",
+    escuela: row.escuela ?? "",
     calificacion: row.calificacion,
     puntualidad: row.puntualidad ?? row.calificacion,
     calidadTaller: row.calidadTaller ?? row.calificacion,

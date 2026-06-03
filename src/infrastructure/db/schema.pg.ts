@@ -43,8 +43,10 @@ export const bitacora = pgTable("bitacora", {
 
 export const encuestas = pgTable("encuestas", {
   id: text("id").primaryKey(),
-  prestador: text("prestador").notNull().default(""),
-  escuela: text("escuela").notNull().default(""),
+  // Nullable a propósito: así `db:push` las agrega a una tabla ya existente
+  // sin pedir confirmación interactiva (clave para el deploy automático).
+  prestador: text("prestador"),
+  escuela: text("escuela"),
   calificacion: integer("calificacion").notNull(),
   puntualidad: integer("puntualidad"),
   calidadTaller: integer("calidad_taller"),
