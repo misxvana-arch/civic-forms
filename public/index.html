@@ -207,6 +207,27 @@
   .estrella:hover{transform:scale(1.12)}
   .estrella.on{color:#E8A93B}
   .estrellas-txt{font-size:.8rem;color:var(--gris);margin-left:10px}
+  .dim-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .dim-lbl{font-size:.84rem;color:var(--tinta)}
+  .estrellas.dim{gap:2px}
+  .estrellas.dim .estrella{font-size:1.35rem}
+  /* prestadores / semáforo / propuestas */
+  .prest-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--arena);flex-wrap:wrap}
+  .prest-row:last-child{border-bottom:none}
+  .prest-nom{flex:1 1 200px;font-size:.88rem;font-weight:600;color:var(--tinta)}
+  .prest-met{font-size:.78rem;color:var(--gris)}
+  .sem{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0}
+  .sem.bien{background:#2E7D5B}.sem.regular{background:#E0A100}.sem.alerta{background:#B23A48}
+  .prest-prom{font-weight:800;color:var(--vino);font-size:1.05rem;min-width:46px;text-align:right}
+  .prop-item{border:1px solid var(--linea);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fff}
+  .prop-item h4{font-size:.96rem;color:var(--vino);margin-bottom:4px}
+  .prop-item .d{font-size:.85rem;color:var(--gris);margin-bottom:6px;white-space:pre-wrap}
+  .prop-item .meta{font-size:.72rem;color:var(--gris)}
+  .apoyar-btn{cursor:pointer;border:1.5px solid var(--verde);background:#fff;color:var(--verde);
+    font-weight:700;font-size:.8rem;padding:7px 14px;border-radius:999px;transition:all .15s;white-space:nowrap}
+  .apoyar-btn:hover:not(:disabled){background:var(--verde);color:#fff}
+  .apoyar-btn:disabled{opacity:.55;cursor:default}
+  .prop-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
   .segmento{display:flex;gap:10px;flex-wrap:wrap}
   .seg-btn{font-family:inherit;font-size:.86rem;font-weight:600;cursor:pointer;
     padding:9px 18px;border-radius:9px;border:1.5px solid var(--linea);background:#fdfcf9;color:var(--gris);transition:all .15s}
@@ -389,6 +410,8 @@
     <button class="tab active" data-tab="inicio"><span class="t-ico">⌂</span>Inicio</button>
     <button class="tab" data-tab="form"><span class="t-ico">✏️</span>Nueva inscripción</button>
     <button class="tab" data-tab="encuesta"><span class="t-ico">★</span>Encuesta</button>
+    <button class="tab" data-tab="transparencia"><span class="t-ico">◍</span>Transparencia</button>
+    <button class="tab" data-tab="propuestas"><span class="t-ico">✦</span>Propuestas</button>
     <button class="tab gestor-only" data-tab="registros" hidden><span class="t-ico">▦</span>Registros</button>
     <button class="tab gestor-only" data-tab="panel" hidden><span class="t-ico">◔</span>Panel</button>
     <button class="tab gestor-only" data-tab="bitacora" hidden><span class="t-ico">≡</span>Bitácora</button>
@@ -630,6 +653,20 @@
       <h2><span class="dot"></span>Encuesta de satisfacción</h2>
       <p class="sub">Tu opinión ayuda a mejorar las jornadas de Mi Barrio, Mi Patrimonio. La encuesta es anónima: no pedimos ningún dato personal.</p>
       <form id="encForm" novalidate>
+        <div class="field full" style="margin-bottom:16px">
+          <label>¿Qué taller / prestador evalúas? <span class="req">*</span></label>
+          <select id="encPrestador">
+            <option value="">Selecciona el prestador del taller…</option>
+          </select>
+          <span class="hint">Es el tercero que impartió el taller en tu escuela.</span>
+          <span class="err-msg" data-for="prestador">Indica qué prestador evalúas.</span>
+        </div>
+
+        <div class="field full" style="margin-bottom:18px">
+          <label>Escuela donde se dio la jornada (opcional)</label>
+          <input type="text" id="encEscuela" placeholder="Nombre de la escuela" maxlength="160">
+        </div>
+
         <div class="field full" style="margin-bottom:18px">
           <label>¿Qué tan satisfecho quedaste con la jornada? <span class="req">*</span></label>
           <div class="estrellas" id="estrellas" role="radiogroup" aria-label="Calificación">
@@ -642,6 +679,42 @@
           </div>
           <span class="err-msg" data-for="calificacion">Selecciona una calificación.</span>
         </div>
+
+        <div class="field full" style="margin-bottom:4px">
+          <label>Desempeño del prestador del taller <span class="req">*</span></label>
+          <span class="hint">Califica del 1 al 5 cada aspecto del tercero que dio el taller.</span>
+        </div>
+        <div class="dim-row">
+          <span class="dim-lbl">Puntualidad y cumplimiento</span>
+          <div class="estrellas dim" id="estPuntualidad" role="radiogroup" aria-label="Puntualidad">
+            <button type="button" class="estrella" data-val="1">★</button>
+            <button type="button" class="estrella" data-val="2">★</button>
+            <button type="button" class="estrella" data-val="3">★</button>
+            <button type="button" class="estrella" data-val="4">★</button>
+            <button type="button" class="estrella" data-val="5">★</button>
+          </div>
+        </div>
+        <div class="dim-row">
+          <span class="dim-lbl">Calidad y dominio del taller</span>
+          <div class="estrellas dim" id="estCalidad" role="radiogroup" aria-label="Calidad del taller">
+            <button type="button" class="estrella" data-val="1">★</button>
+            <button type="button" class="estrella" data-val="2">★</button>
+            <button type="button" class="estrella" data-val="3">★</button>
+            <button type="button" class="estrella" data-val="4">★</button>
+            <button type="button" class="estrella" data-val="5">★</button>
+          </div>
+        </div>
+        <div class="dim-row" style="margin-bottom:6px">
+          <span class="dim-lbl">Trato a la comunidad escolar</span>
+          <div class="estrellas dim" id="estTrato" role="radiogroup" aria-label="Trato">
+            <button type="button" class="estrella" data-val="1">★</button>
+            <button type="button" class="estrella" data-val="2">★</button>
+            <button type="button" class="estrella" data-val="3">★</button>
+            <button type="button" class="estrella" data-val="4">★</button>
+            <button type="button" class="estrella" data-val="5">★</button>
+          </div>
+        </div>
+        <span class="err-msg" data-for="dimensiones" style="margin-bottom:14px">Califica los tres aspectos del prestador.</span>
 
         <div class="field full" style="margin-bottom:18px">
           <label>¿Recomendarías el programa a otra escuela? <span class="req">*</span></label>
@@ -664,6 +737,54 @@
           <button type="reset" class="btn btn-ghost">Limpiar</button>
         </div>
       </form>
+    </div>
+  </section>
+
+  <!-- TRANSPARENCIA (pública) -->
+  <section class="panel" id="transparencia">
+    <div class="card">
+      <h2><span class="dot"></span>Transparencia de resultados</h2>
+      <p class="sub">Datos abiertos del programa, en tiempo real. Cifras agregadas; nunca datos personales.</p>
+      <div id="transparenciaResumen"><div class="empty">Cargando…</div></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Desempeño de los talleres (prestadores)</h2>
+      <p class="sub">Promedio de satisfacción por tercero prestador, según la encuesta pública.</p>
+      <div id="transparenciaPrestadores"><div class="empty">Cargando…</div></div>
+    </div>
+  </section>
+
+  <!-- PROPUESTAS / CO-CREACIÓN (pública) -->
+  <section class="panel" id="propuestas">
+    <div class="card" style="max-width:680px;margin:0 auto 22px">
+      <h2><span class="dot"></span>Propón un contenido</h2>
+      <p class="sub">¿Qué taller o tema te gustaría para las jornadas? Tu propuesta es pública y otras escuelas pueden apoyarla. Es anónima: no pedimos datos personales.</p>
+      <form id="propForm" novalidate>
+        <div class="field full" style="margin-bottom:14px">
+          <label>Título de la propuesta <span class="req">*</span></label>
+          <input type="text" id="propTitulo" maxlength="120" placeholder="Ej. Taller de leyendas del Centro Histórico">
+          <span class="err-msg" data-for="propTitulo">Escribe un título (mín. 4 caracteres).</span>
+        </div>
+        <div class="field full" style="margin-bottom:14px">
+          <label>Descripción <span class="req">*</span></label>
+          <textarea id="propDescripcion" rows="3" maxlength="800" placeholder="Describe tu idea para el programa…"
+            style="font-family:inherit;font-size:.9rem;padding:10px 12px;border:1.5px solid var(--linea);border-radius:9px;background:#fdfcf9;resize:vertical;width:100%"></textarea>
+          <span class="err-msg" data-for="propDescripcion">Describe un poco más (mín. 10 caracteres).</span>
+        </div>
+        <div class="field full" style="margin-bottom:8px">
+          <label>Escuela (opcional)</label>
+          <input type="text" id="propEscuela" maxlength="160" placeholder="Nombre de tu escuela">
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Enviar propuesta</button>
+          <button type="reset" class="btn btn-ghost">Limpiar</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2><span class="dot"></span>Propuestas de la comunidad</h2>
+      <p class="sub">Apoya las ideas que más te gusten. Las más apoyadas aparecen primero.</p>
+      <div id="propuestasLista"><div class="empty">Cargando…</div></div>
     </div>
   </section>
 
@@ -715,6 +836,16 @@
       <h2><span class="dot"></span>Satisfacción de las jornadas</h2>
       <p class="sub">Resultados agregados de la encuesta pública (anónima).</p>
       <div id="resumenEncuestas"></div>
+    </div>
+    <div class="card">
+      <div class="toolbar">
+        <div>
+          <h2><span class="dot"></span>Desempeño por prestador (insumo para requisiciones)</h2>
+          <p class="sub" style="margin:0">Encuesta agrupada por tercero, para sustentar decisiones de contratación. 🟢 buen desempeño · 🟡 vigilar · 🔴 revisar contrato.</p>
+        </div>
+        <button class="btn btn-ghost" id="exportarPrestadores" style="padding:9px 18px;font-size:.85rem">Exportar reporte CSV</button>
+      </div>
+      <div id="reportePrestadores"></div>
     </div>
   </section>
 
@@ -851,6 +982,9 @@
     document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active', x.id===nombre));
     if(nombre==='inicio') renderInicio();
     if(nombre==='form') cargarCatalogoInsc();
+    if(nombre==='encuesta') cargarPrestadores();
+    if(nombre==='transparencia') renderTransparencia();
+    if(nombre==='propuestas') renderPropuestas();
     if(nombre==='registros') renderTabla(document.getElementById('buscar').value);
     if(nombre==='panel'){ renderPanel(); renderResumenEncuestas(); }
     if(nombre==='bitacora') renderBitacora();
@@ -1462,30 +1596,34 @@
   document.getElementById('filtroMapa').addEventListener('change', aplicarFiltroMapa);
 
   // --- Encuesta de satisfacción (pública) ---
-  const estrellas = document.querySelectorAll('#estrellas .estrella');
   const estrellasTxt = document.getElementById('estrellasTxt');
   const TXT_CALIF = {1:'Muy insatisfecho',2:'Insatisfecho',3:'Neutral',4:'Satisfecho',5:'Muy satisfecho'};
-  let encCalif = 0;
   let encRecom = null;
 
   function errEnc(campo, mostrar){
     const m = document.querySelector(`.err-msg[data-for="${campo}"]`);
     if(m) m.classList.toggle('show', mostrar);
   }
-  function pintarEstrellas(n){
-    estrellas.forEach(e=>e.classList.toggle('on', Number(e.dataset.val)<=n));
-  }
-  estrellas.forEach(e=>{
-    const v = Number(e.dataset.val);
-    e.addEventListener('mouseenter', ()=>pintarEstrellas(v));
-    e.addEventListener('mouseleave', ()=>pintarEstrellas(encCalif));
-    e.addEventListener('click', ()=>{
-      encCalif = v;
-      pintarEstrellas(v);
-      estrellasTxt.textContent = TXT_CALIF[v];
-      errEnc('calificacion', false);
+
+  // Widget reutilizable de estrellas 1–5. Devuelve get()/reset().
+  function initEstrellas(sel, onSet){
+    const ests = [...document.querySelectorAll(sel+' .estrella')];
+    let val = 0;
+    const pintar = n => ests.forEach(e=>e.classList.toggle('on', Number(e.dataset.val)<=n));
+    ests.forEach(e=>{
+      const v = Number(e.dataset.val);
+      e.addEventListener('mouseenter', ()=>pintar(v));
+      e.addEventListener('mouseleave', ()=>pintar(val));
+      e.addEventListener('click', ()=>{ val=v; pintar(v); if(onSet) onSet(v); });
     });
-  });
+    return { get:()=>val, reset:()=>{ val=0; pintar(0); } };
+  }
+
+  const wCalif = initEstrellas('#estrellas', v=>{ estrellasTxt.textContent = TXT_CALIF[v]; errEnc('calificacion', false); });
+  const wPunt  = initEstrellas('#estPuntualidad', ()=>errEnc('dimensiones', false));
+  const wCalid = initEstrellas('#estCalidad', ()=>errEnc('dimensiones', false));
+  const wTrato = initEstrellas('#estTrato', ()=>errEnc('dimensiones', false));
+
   document.querySelectorAll('#recomendaria .seg-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
       encRecom = b.dataset.val==='si';
@@ -1494,9 +1632,23 @@
     });
   });
 
+  // Carga el catálogo de terceros prestadores en el desplegable (una sola vez).
+  let prestadoresCargados = false;
+  async function cargarPrestadores(){
+    if(prestadoresCargados) return;
+    try{
+      const r = await pedir('/api/prestadores');
+      if(!r.ok) return;
+      const lista = await r.json();
+      const sel = document.getElementById('encPrestador');
+      lista.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o); });
+      prestadoresCargados = true;
+    }catch(err){ /* sin catálogo, el desplegable queda solo con el placeholder */ }
+  }
+
   function resetEncuesta(){
-    encCalif = 0; encRecom = null;
-    pintarEstrellas(0);
+    encRecom = null;
+    wCalif.reset(); wPunt.reset(); wCalid.reset(); wTrato.reset();
     estrellasTxt.textContent = 'Toca una estrella';
     document.querySelectorAll('#recomendaria .seg-btn').forEach(x=>x.classList.remove('on'));
   }
@@ -1504,11 +1656,19 @@
   document.getElementById('encForm').addEventListener('submit', async e=>{
     e.preventDefault();
     let ok = true;
-    if(encCalif<1){ errEnc('calificacion', true); ok=false; }
+    const prestador = document.getElementById('encPrestador').value;
+    if(!prestador){ errEnc('prestador', true); ok=false; }
+    if(wCalif.get()<1){ errEnc('calificacion', true); ok=false; }
+    if(wPunt.get()<1 || wCalid.get()<1 || wTrato.get()<1){ errEnc('dimensiones', true); ok=false; }
     if(encRecom===null){ errEnc('recomendaria', true); ok=false; }
     if(!ok) return;
     const payload = {
-      calificacion: encCalif,
+      prestador,
+      escuela: document.getElementById('encEscuela').value.trim(),
+      calificacion: wCalif.get(),
+      puntualidad: wPunt.get(),
+      calidadTaller: wCalid.get(),
+      trato: wTrato.get(),
       recomendaria: encRecom,
       comentario: document.getElementById('comentario').value.trim()
     };
@@ -1530,15 +1690,22 @@
   document.getElementById('encForm').addEventListener('reset', resetEncuesta);
 
   // Resumen de la encuesta (gestor, dentro del Panel)
+  let ultimoPorPrestador = []; // cache para exportar el reporte
   async function renderResumenEncuestas(){
     const cont = document.getElementById('resumenEncuestas');
+    const rep = document.getElementById('reportePrestadores');
     let s;
     try{
       const r = await pedir('/api/encuestas/resumen');
-      if(!r.ok){ cont.innerHTML = '<div class="empty">No se pudo cargar el resumen.</div>'; return; }
+      if(!r.ok){ cont.innerHTML = '<div class="empty">No se pudo cargar el resumen.</div>'; if(rep) rep.innerHTML=''; return; }
       s = await r.json();
-    }catch(err){ cont.innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>'; return; }
-    if(s.total===0){ cont.innerHTML = '<div class="empty">Aún no hay respuestas de la encuesta.</div>'; return; }
+    }catch(err){ cont.innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>'; if(rep) rep.innerHTML=''; return; }
+    ultimoPorPrestador = s.porPrestador || [];
+    if(s.total===0){
+      cont.innerHTML = '<div class="empty">Aún no hay respuestas de la encuesta.</div>';
+      if(rep) rep.innerHTML = '<div class="empty">Sin respuestas todavía: aún no hay desempeño que reportar.</div>';
+      return;
+    }
     let html = `<div class="enc-top">
       <div class="enc-big"><div class="n">${s.promedio}<small>/5</small></div><div class="l">Promedio</div></div>
       <div class="enc-big"><div class="n">${s.total}</div><div class="l">Respuestas</div></div>
@@ -1560,7 +1727,130 @@
       });
     }
     cont.innerHTML = html;
+
+    // Reporte por prestador (insumo para requisiciones)
+    if(rep){
+      if(!ultimoPorPrestador.length){ rep.innerHTML = '<div class="empty">Sin datos por prestador.</div>'; }
+      else{
+        const TXT_SEM = {bien:'Buen desempeño', regular:'Aceptable — vigilar', alerta:'Bajo — revisar contrato'};
+        let h = `<div class="table-wrap"><table><thead><tr>
+          <th></th><th>Prestador</th><th>Respuestas</th><th>General</th><th>Puntualidad</th><th>Calidad</th><th>Trato</th><th>Recomienda</th><th>Lectura</th>
+        </tr></thead><tbody>`;
+        ultimoPorPrestador.forEach(p=>{
+          h += `<tr>
+            <td><span class="sem ${p.semaforo}"></span></td>
+            <td>${esc(p.prestador)}</td>
+            <td style="text-align:center">${p.total}</td>
+            <td style="text-align:center"><strong>${p.promedio}</strong></td>
+            <td style="text-align:center">${p.promedioPuntualidad}</td>
+            <td style="text-align:center">${p.promedioCalidad}</td>
+            <td style="text-align:center">${p.promedioTrato}</td>
+            <td style="text-align:center">${p.porcentajeRecomienda}%</td>
+            <td>${TXT_SEM[p.semaforo]||''}</td>
+          </tr>`;
+        });
+        h += '</tbody></table></div>';
+        rep.innerHTML = h;
+      }
+    }
   }
+
+  // Exporta el reporte por prestador a CSV (insumo para requisiciones).
+  document.getElementById('exportarPrestadores')?.addEventListener('click', ()=>{
+    if(!ultimoPorPrestador.length){ mostrarToast('No hay datos para exportar', true); return; }
+    const cols = ['prestador','total','promedio','promedioPuntualidad','promedioCalidad','promedioTrato','porcentajeRecomienda','semaforo'];
+    const csv = [cols.join(',')].concat(
+      ultimoPorPrestador.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))
+    ).join('\n');
+    const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'desempeno_prestadores_mbmp.csv';
+    a.click();
+  });
+
+  // --- Transparencia (pública) ---
+  async function renderTransparencia(){
+    const res = document.getElementById('transparenciaResumen');
+    const pre = document.getElementById('transparenciaPrestadores');
+    let t;
+    try{
+      const r = await pedir('/api/transparencia');
+      if(!r.ok){ res.innerHTML = '<div class="empty">No se pudieron cargar los resultados.</div>'; return; }
+      t = await r.json();
+    }catch(err){ res.innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>'; return; }
+    const n = x => Number(x).toLocaleString('es-MX');
+    res.innerHTML = `<div class="stats" style="margin-bottom:0">
+      <div class="stat"><div class="num">${n(t.escuelasInscritas)}</div><div class="lbl">Escuelas inscritas</div></div>
+      <div class="stat"><div class="num">${n(t.jornadasConcluidas)}</div><div class="lbl">Jornadas concluidas</div></div>
+      <div class="stat"><div class="num">${n(t.ninosBeneficiados)}</div><div class="lbl">Niñas y niños beneficiados</div></div>
+      <div class="stat"><div class="num">${t.coberturaPct}<small>%</small></div><div class="lbl">Cobertura del padrón</div></div>
+      <div class="stat"><div class="num">${t.satisfaccionPromedio}<small>/5</small></div><div class="lbl">Satisfacción promedio</div></div>
+      <div class="stat"><div class="num">${t.porcentajeRecomienda}<small>%</small></div><div class="lbl">Recomendaría el programa</div></div>
+    </div>`;
+    if(!t.desempenoPrestadores || !t.desempenoPrestadores.length){
+      pre.innerHTML = '<div class="empty">Aún no hay encuestas respondidas.</div>'; return;
+    }
+    pre.innerHTML = t.desempenoPrestadores.map(p=>`<div class="prest-row">
+      <span class="sem ${p.semaforo}"></span>
+      <span class="prest-nom">${esc(p.prestador)}</span>
+      <span class="prest-met">${p.total} ${p.total===1?'respuesta':'respuestas'}</span>
+      <span class="prest-prom">${p.promedio}<small style="font-weight:400;color:var(--gris)">/5</small></span>
+    </div>`).join('');
+  }
+
+  // --- Propuestas / co-creación (pública) ---
+  function yaApoye(id){ try{ return (JSON.parse(localStorage.getItem('apoyos')||'[]')).includes(id); }catch(e){ return false; } }
+  function marcarApoyo(id){ try{ const a=JSON.parse(localStorage.getItem('apoyos')||'[]'); a.push(id); localStorage.setItem('apoyos', JSON.stringify(a)); }catch(e){} }
+
+  async function renderPropuestas(){
+    const cont = document.getElementById('propuestasLista');
+    let lista;
+    try{
+      const r = await pedir('/api/propuestas');
+      if(!r.ok){ cont.innerHTML = '<div class="empty">No se pudieron cargar las propuestas.</div>'; return; }
+      lista = await r.json();
+    }catch(err){ cont.innerHTML = '<div class="empty">No se pudo conectar con el servidor.</div>'; return; }
+    if(!lista.length){ cont.innerHTML = '<div class="empty">Aún no hay propuestas. ¡Sé la primera escuela en proponer!</div>'; return; }
+    cont.innerHTML = lista.map(p=>`<div class="prop-item">
+      <div class="prop-head">
+        <h4>${esc(p.titulo)}</h4>
+        <button class="apoyar-btn" data-id="${esc(p.id)}" ${yaApoye(p.id)?'disabled':''}>♥ Apoyar · <strong>${p.apoyos}</strong></button>
+      </div>
+      <div class="d">${esc(p.descripcion)}</div>
+      ${p.escuela?`<div class="meta">Propuesta por: ${esc(p.escuela)}</div>`:''}
+    </div>`).join('');
+    cont.querySelectorAll('.apoyar-btn').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        const id = b.dataset.id;
+        if(yaApoye(id)) return;
+        b.disabled = true;
+        try{
+          const r = await pedir(`/api/propuestas/${id}/apoyar`, {method:'POST'});
+          if(r.ok){ marcarApoyo(id); mostrarToast('¡Gracias por tu apoyo!'); renderPropuestas(); }
+          else { b.disabled=false; mostrarToast('No se pudo registrar el apoyo', true); }
+        }catch(err){ b.disabled=false; mostrarToast('Error de conexión', true); }
+      });
+    });
+  }
+
+  document.getElementById('propForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const titulo = document.getElementById('propTitulo').value.trim();
+    const descripcion = document.getElementById('propDescripcion').value.trim();
+    let ok = true;
+    if(titulo.length<4){ document.querySelector('.err-msg[data-for="propTitulo"]').classList.add('show'); ok=false; }
+    else document.querySelector('.err-msg[data-for="propTitulo"]').classList.remove('show');
+    if(descripcion.length<10){ document.querySelector('.err-msg[data-for="propDescripcion"]').classList.add('show'); ok=false; }
+    else document.querySelector('.err-msg[data-for="propDescripcion"]').classList.remove('show');
+    if(!ok) return;
+    const payload = { titulo, descripcion, escuela: document.getElementById('propEscuela').value.trim() };
+    try{
+      const r = await pedir('/api/propuestas', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+      if(r.status===201){ e.target.reset(); mostrarToast('¡Propuesta enviada!'); renderPropuestas(); }
+      else { mostrarToast('No se pudo enviar la propuesta', true); }
+    }catch(err){ mostrarToast('Error de conexión con el servidor', true); }
+  });
 
   // Init: verifica si hay sesión activa y luego pinta el hub de inicio.
   // El padrón de escuelas se precarga para que el autocompletado esté listo.

@@ -45,10 +45,28 @@ export type EventoBitacoraRow = typeof bitacora.$inferSelect;
 // No hay llave foránea a una persona: por diseño no guarda datos personales.
 export const encuestas = sqliteTable("encuestas", {
   id: text("id").primaryKey(),
+  prestador: text("prestador").notNull().default(""),
+  escuela: text("escuela").notNull().default(""),
   calificacion: integer("calificacion").notNull(),
+  puntualidad: integer("puntualidad"),
+  calidadTaller: integer("calidad_taller"),
+  trato: integer("trato"),
   recomendaria: integer("recomendaria", { mode: "boolean" }).notNull(),
   comentario: text("comentario").notNull().default(""),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
 export type EncuestaRow = typeof encuestas.$inferSelect;
+
+// Co-creación (Gobierno Abierto): propuestas de contenido del público y los
+// apoyos (votos) que reciben.
+export const propuestas = sqliteTable("propuestas", {
+  id: text("id").primaryKey(),
+  titulo: text("titulo").notNull(),
+  descripcion: text("descripcion").notNull(),
+  escuela: text("escuela").notNull().default(""),
+  apoyos: integer("apoyos").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export type PropuestaRow = typeof propuestas.$inferSelect;

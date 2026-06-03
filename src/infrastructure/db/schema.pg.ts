@@ -43,12 +43,29 @@ export const bitacora = pgTable("bitacora", {
 
 export const encuestas = pgTable("encuestas", {
   id: text("id").primaryKey(),
+  prestador: text("prestador").notNull().default(""),
+  escuela: text("escuela").notNull().default(""),
   calificacion: integer("calificacion").notNull(),
+  puntualidad: integer("puntualidad"),
+  calidadTaller: integer("calidad_taller"),
+  trato: integer("trato"),
   recomendaria: boolean("recomendaria").notNull(),
   comentario: text("comentario").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+// Co-creación (Gobierno Abierto): propuestas de contenido del público y los
+// apoyos (votos) que reciben.
+export const propuestas = pgTable("propuestas", {
+  id: text("id").primaryKey(),
+  titulo: text("titulo").notNull(),
+  descripcion: text("descripcion").notNull(),
+  escuela: text("escuela").notNull().default(""),
+  apoyos: integer("apoyos").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
 
 export type InscripcionRow = typeof inscripciones.$inferSelect;
 export type EventoBitacoraRow = typeof bitacora.$inferSelect;
 export type EncuestaRow = typeof encuestas.$inferSelect;
+export type PropuestaRow = typeof propuestas.$inferSelect;

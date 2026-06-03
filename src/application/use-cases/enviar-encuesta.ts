@@ -11,8 +11,15 @@ export class EnviarEncuesta {
   constructor(private readonly repo: EncuestaRepository) {}
 
   async execute(datos: DatosEncuesta): Promise<Encuesta> {
-    // Invariante de dominio: la escala se respeta aunque el cliente falle.
-    if (!calificacionValida(datos.calificacion)) {
+    // Invariante de dominio: toda calificación (general y por dimensión) debe
+    // respetar la escala, aunque el cliente falle.
+    const escalas = [
+      datos.calificacion,
+      datos.puntualidad,
+      datos.calidadTaller,
+      datos.trato,
+    ];
+    if (!escalas.every(calificacionValida)) {
       throw new CalificacionInvalidaError();
     }
 

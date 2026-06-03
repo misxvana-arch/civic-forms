@@ -25,10 +25,16 @@ import { ListarCatalogoInscripcion } from "../../application/use-cases/listar-ca
 import { CsvCatalogoEscuelas } from "../escuelas/csv-catalogo-escuelas.ts";
 import { EnviarEncuesta } from "../../application/use-cases/enviar-encuesta.ts";
 import { ObtenerResumenEncuestas } from "../../application/use-cases/obtener-resumen-encuestas.ts";
+import { ObtenerTransparencia } from "../../application/use-cases/obtener-transparencia.ts";
+import { CrearPropuesta } from "../../application/use-cases/crear-propuesta.ts";
+import { ListarPropuestas } from "../../application/use-cases/listar-propuestas.ts";
+import { ApoyarPropuesta } from "../../application/use-cases/apoyar-propuesta.ts";
 import { InscripcionController } from "./controllers/inscripcion-controller.ts";
 import { EncuestaController } from "./controllers/encuesta-controller.ts";
+import { ParticipacionController } from "./controllers/participacion-controller.ts";
 import { registrarRutasInscripcion } from "./routes/inscripcion-routes.ts";
 import { registrarRutasEncuesta } from "./routes/encuesta-routes.ts";
+import { registrarRutasParticipacion } from "./routes/participacion-routes.ts";
 import { registrarRutasAuth } from "./routes/auth-routes.ts";
 
 // --- Composición de dependencias (composition root) ---
@@ -41,6 +47,7 @@ const {
   inscripcion: repo,
   bitacora: bitacoraRepo,
   encuesta: encuestaRepo,
+  propuesta: propuestaRepo,
 } = await crearRepositorios();
 // Catálogo de escuelas: fuente externa (CSV del DENUE) en la raíz del proyecto.
 const catalogoEscuelas = new CsvCatalogoEscuelas();
@@ -55,9 +62,16 @@ const controller = new InscripcionController({
   escuelasMapa: new ListarEscuelasMapa(catalogoEscuelas, repo),
   catalogoInscripcion: new ListarCatalogoInscripcion(catalogoEscuelas, repo),
 });
+const resumenEncuestas = new ObtenerResumenEncuestas(encuestaRepo);
 const encuestaController = new EncuestaController({
   enviar: new EnviarEncuesta(encuestaRepo),
-  resumen: new ObtenerResumenEncuestas(encuestaRepo),
+  resumen: resumenEncuestas,
+});
+const participacionController = new ParticipacionController({
+  transparencia: new ObtenerTransparencia(repo, catalogoEscuelas, resumenEncuestas),
+  crearPropuesta: new CrearPropuesta(propuestaRepo),
+  listarPropuestas: new ListarPropuestas(propuestaRepo),
+  apoyarPropuesta: new ApoyarPropuesta(propuestaRepo),
 });
 
 const app = Fastify({
@@ -98,6 +112,7 @@ app.get("/salud", async () => ({ ok: true }));
 registrarRutasAuth(app);
 registrarRutasInscripcion(app, controller);
 registrarRutasEncuesta(app, encuestaController);
+registrarRutasParticipacion(app, participacionController);
 
 // Mapeo central de errores. Las reglas de negocio salen como 4xx con su
 // código; lo demás es 500 genérico (sin filtrar datos sensibles).
