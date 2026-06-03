@@ -16,12 +16,15 @@ export interface Repositorios {
 // y en prod nunca se carga el binario nativo de SQLite.
 export async function crearRepositorios(): Promise<Repositorios> {
   if (env.DB_DRIVER === "postgres") {
-    const [inscMod, bitaMod, encMod, propMod] = await Promise.all([
+    const [inscMod, bitaMod, encMod, propMod, clientMod] = await Promise.all([
       import("./repositories/pg-inscripcion-repository.ts"),
       import("./repositories/pg-bitacora-repository.ts"),
       import("./repositories/pg-encuesta-repository.ts"),
       import("./repositories/pg-propuesta-repository.ts"),
+      import("./pg-client.ts"),
     ]);
+    // Asegura que el esquema esté completo antes de atender peticiones.
+    await clientMod.ensureSchemaPg();
     return {
       inscripcion: new inscMod.PgInscripcionRepository(),
       bitacora: new bitaMod.PgBitacoraRepository(),
