@@ -808,8 +808,13 @@
   <!-- PANEL -->
   <section class="panel" id="panel">
     <div class="card">
-      <h2><span class="dot"></span>Panel de seguimiento</h2>
-      <p class="sub">Conteo en tiempo real de las inscripciones capturadas.</p>
+      <div class="toolbar">
+        <div>
+          <h2><span class="dot"></span>Panel de seguimiento</h2>
+          <p class="sub" style="margin:0">Conteo en tiempo real de las inscripciones capturadas.</p>
+        </div>
+        <button class="btn btn-primary" id="exportarInforme" style="padding:9px 18px;font-size:.85rem">📄 Informe ejecutivo (PDF)</button>
+      </div>
       <div class="stats">
         <div class="stat"><div class="num" id="stEscuelas">0</div><div class="lbl">Escuelas inscritas</div></div>
         <div class="stat"><div class="num" id="stNinos">0</div><div class="lbl">Niñas y niños estimados</div></div>
@@ -1479,6 +1484,189 @@
         </div>`).join('');
     }
   }
+
+  // --- Informe ejecutivo de resultados (PDF) ---
+  // Reúne los datos del panel y de la encuesta y abre una vista imprimible
+  // que el gestor guarda como PDF. Institucional y sin datos personales.
+  async function exportarInformePDF(){
+    let p, s;
+    try{
+      const [rp, rs] = await Promise.all([pedir('/api/panel'), pedir('/api/encuestas/resumen')]);
+      if(!rp.ok){ mostrarToast(rp.status===401 ? 'Inicia sesión como gestor para el informe.' : 'No se pudo generar el informe.', true); return; }
+      p = await rp.json();
+      s = rs.ok ? await rs.json() : { total:0 };
+    }catch(err){ mostrarToast('No se pudo generar el informe (sin conexión).', true); return; }
+    if(!p || !p.escuelas){ mostrarToast('Aún no hay inscripciones para generar el informe.', true); return; }
+
+    // Se abre el informe en una pestaña nueva (lo ves directamente) con un
+    // botón visible para guardarlo como PDF. Es el método más confiable.
+    const w = window.open('', '_blank');
+    if(!w){ mostrarToast('Permite las ventanas emergentes (icono en la barra de direcciones) y reintenta.', true); return; }
+    w.document.open();
+    w.document.write(construirInformeHTML(p, s));
+    w.document.close();
+    w.focus();
+    mostrarToast('Informe abierto en una pestaña nueva.');
+  }
+
+  function construirInformeHTML(p, s){
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'});
+    const hora  = ahora.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+    const totalCat = p.totalCatalogo || 0;
+    const pctInsc = totalCat ? (p.escuelas/totalCat*100) : 0;
+    const pctConc = p.escuelas ? (p.concluidas/p.escuelas*100) : 0;
+
+    // Expedientes por estado
+    const maxE = Math.max(1, ...(p.porEstado||[]).map(e=>e.total));
+    const estadoRows = (p.porEstado||[]).map(e=>{
+      const col = (typeof ESTADO_COLOR!=='undefined' && ESTADO_COLOR[e.estado]) || '#999';
+      return `<div class="bar"><div class="bar-l">${esc(e.estado)}</div><div class="bar-track"><div class="bar-fill" style="width:${e.total/maxE*100}%;background:${col}"></div></div><div class="bar-v">${e.total}</div></div>`;
+    }).join('') || '<p class="muted">Sin expedientes todavía.</p>';
+
+    // Cobertura por barrio
+    const barrios = p.porBarrio||[];
+    const barrioHTML = barrios.length
+      ? `<table class="tbl"><thead><tr><th>Barrio / zona</th><th class="c">Inscritas</th><th class="c">Concluidas</th></tr></thead><tbody>`+
+        barrios.map(b=>`<tr><td>${esc(b.barrio)}</td><td class="c">${b.inscritas}</td><td class="c">${b.concluidas}</td></tr>`).join('')+
+        `</tbody></table>`
+      : '<p class="muted">Sin datos por barrio todavía.</p>';
+
+    // Satisfacción
+    let satHTML;
+    if(s && s.total>0){
+      const max = Math.max(1, ...(s.distribucion||[1]));
+      let bars='';
+      for(let k=5;k>=1;k--){ const c=(s.distribucion||[])[k-1]||0; bars += `<div class="bar"><div class="bar-l">${k} ★</div><div class="bar-track"><div class="bar-fill" style="width:${c/max*100}%;background:#7B1E3D"></div></div><div class="bar-v">${c}</div></div>`; }
+      satHTML = `<div class="kpis sat">
+          <div class="kpi alt"><div class="kn">${s.promedio}<small>/5</small></div><div class="kl">Satisfacción promedio</div></div>
+          <div class="kpi alt"><div class="kn">${s.total}</div><div class="kl">Respuestas</div></div>
+          <div class="kpi alt"><div class="kn">${s.porcentajeRecomienda}<small>%</small></div><div class="kl">Recomendaría</div></div>
+        </div>${bars}`;
+    } else {
+      satHTML = '<p class="muted">Aún no hay respuestas de la encuesta registradas.</p>';
+    }
+
+    // Desempeño por prestador
+    const TXT_SEM = {bien:'Buen desempeño', regular:'Aceptable — vigilar', alerta:'Bajo — revisar contrato'};
+    const SEM_COL = {bien:'#2e7d32', regular:'#e6a700', alerta:'#c62828'};
+    const prest = (s && s.porPrestador) || [];
+    const prestHTML = prest.length
+      ? `<table class="tbl"><thead><tr><th>Prestador</th><th class="c">Resp.</th><th class="c">General</th><th class="c">Punt.</th><th class="c">Calidad</th><th class="c">Trato</th><th class="c">Recom.</th><th>Lectura</th></tr></thead><tbody>`+
+        prest.map(pr=>`<tr><td>${esc(pr.prestador)}</td><td class="c">${pr.total}</td><td class="c"><strong>${pr.promedio}</strong></td><td class="c">${pr.promedioPuntualidad}</td><td class="c">${pr.promedioCalidad}</td><td class="c">${pr.promedioTrato}</td><td class="c">${pr.porcentajeRecomienda}%</td><td><span class="sem" style="background:${SEM_COL[pr.semaforo]||'#999'}"></span>${TXT_SEM[pr.semaforo]||''}</td></tr>`).join('')+
+        `</tbody></table>`
+      : '<p class="muted">Sin respuestas por prestador todavía.</p>';
+
+    // Comentarios destacados
+    let comHTML = '';
+    if(s && s.comentarios && s.comentarios.length){
+      comHTML = `<div class="sec"><h2>7. Comentarios destacados de la comunidad</h2>`+
+        s.comentarios.slice(0,5).map(co=>`<div class="quote"><span class="stars">${'★'.repeat(co.calificacion)}</span> ${esc(co.comentario)}</div>`).join('')+
+        `</div>`;
+    }
+
+    return `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Informe Ejecutivo · Mi Barrio, Mi Patrimonio</title>
+<style>
+  *{box-sizing:border-box}
+  :root{--vino:#7B1E3D;--verde:#5E7D5A;--crema:#F4EFE6;--tinta:#2E2A28}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:'Segoe UI',Arial,sans-serif;color:var(--tinta);margin:0;font-size:12px;line-height:1.5}
+  .wrap{max-width:780px;margin:0 auto;padding:28px 30px}
+  .top{border-bottom:3px solid var(--vino);padding-bottom:14px;margin-bottom:6px}
+  .kicker{color:var(--verde);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:10px;margin:0}
+  h1{color:var(--vino);font-size:22px;margin:4px 0 2px}
+  .org{font-size:11px;color:#555;margin:2px 0 0}
+  .meta{font-size:10.5px;color:#777;margin-top:8px}
+  .sec{margin-top:20px;page-break-inside:avoid}
+  .sec h2{color:var(--vino);font-size:14px;margin:0 0 8px;border-left:4px solid var(--verde);padding-left:9px}
+  .muted{color:#888;font-style:italic;margin:4px 0}
+  .kpis{display:flex;gap:10px;flex-wrap:wrap}
+  .kpi{flex:1;min-width:120px;background:var(--crema);border:1px solid #e6dccb;border-radius:9px;padding:12px 14px}
+  .kpi .kn{font-size:26px;font-weight:800;color:var(--vino);line-height:1}
+  .kpi .kn small{font-size:13px;color:#999;font-weight:600}
+  .kpi .kl{font-size:10.5px;color:#444;margin-top:4px;font-weight:600}
+  .kpi .ks{font-size:9.5px;color:#888;margin-top:2px}
+  .kpi.alt{background:#fff;border-color:#e6dccb}
+  .kpis.sat{margin-bottom:12px}
+  .bar{display:flex;align-items:center;gap:8px;margin:5px 0}
+  .bar-l{width:120px;font-size:11px;color:#444}
+  .bar-track{flex:1;height:13px;background:#eee;border-radius:7px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:7px}
+  .bar-v{width:34px;text-align:right;font-weight:700;font-size:11px}
+  .tbl{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:4px}
+  .tbl th{background:var(--vino);color:#fff;text-align:left;padding:6px 8px;font-weight:600}
+  .tbl th.c,.tbl td.c{text-align:center}
+  .tbl td{padding:6px 8px;border-bottom:1px solid #eee}
+  .tbl tr:nth-child(even) td{background:#faf7f1}
+  .sem{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .quote{background:#faf7f1;border-left:3px solid var(--verde);padding:7px 11px;margin:6px 0;font-size:11px;border-radius:0 6px 6px 0}
+  .quote .stars{color:#e6a700;margin-right:6px}
+  .foot{margin-top:26px;border-top:1px solid #ddd;padding-top:10px;font-size:9.5px;color:#888}
+  .noprint{background:var(--vino);color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:9}
+  .noprint span{font-size:12px}
+  .noprint button{background:#fff;color:var(--vino);border:0;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer}
+  @page{size:A4;margin:14mm}
+  @media print{.wrap{padding:0}.noprint{display:none}}
+</style></head>
+<body>
+  <div class="noprint">
+    <span>Vista del informe ejecutivo · usa el botón para guardarlo como PDF.</span>
+    <button onclick="window.print()">📄 Guardar como PDF</button>
+  </div>
+  <div class="wrap">
+  <div class="top">
+    <p class="kicker">Informe Ejecutivo de Resultados</p>
+    <h1>Programa “Mi Barrio, Mi Patrimonio”</h1>
+    <p class="org">Sistema de Gestión de Inscripciones (SGI) · Gerencia del Centro Histórico y Patrimonio Cultural · H. Ayuntamiento de Puebla</p>
+    <p class="meta">Generado el ${fecha} a las ${hora} h · Datos agregados, sin información personal.</p>
+  </div>
+
+  <div class="sec">
+    <h2>1. Indicadores clave</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="kn">${p.escuelas}</div><div class="kl">Escuelas inscritas</div><div class="ks">${pctInsc.toFixed(1)}% del padrón (${totalCat})</div></div>
+      <div class="kpi"><div class="kn">${p.concluidas}</div><div class="kl">Jornadas concluidas</div><div class="ks">${pctConc.toFixed(0)}% de las inscritas</div></div>
+      <div class="kpi"><div class="kn">${p.ninos}</div><div class="kl">Niñas y niños</div><div class="ks">beneficio estimado</div></div>
+      <div class="kpi"><div class="kn">${p.publicas}</div><div class="kl">Escuelas públicas</div><div class="ks">de ${p.escuelas} inscritas</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>2. Cobertura del programa</h2>
+    <div class="bar"><div class="bar-l">Inscripción / padrón</div><div class="bar-track"><div class="bar-fill" style="width:${pctInsc}%;background:var(--vino)"></div></div><div class="bar-v">${pctInsc.toFixed(0)}%</div></div>
+    <div class="bar"><div class="bar-l">Conclusión / inscritas</div><div class="bar-track"><div class="bar-fill" style="width:${pctConc}%;background:var(--verde)"></div></div><div class="bar-v">${pctConc.toFixed(0)}%</div></div>
+  </div>
+
+  <div class="sec">
+    <h2>3. Expedientes por estado</h2>
+    ${estadoRows}
+  </div>
+
+  <div class="sec">
+    <h2>4. Cobertura por barrio / zona</h2>
+    ${barrioHTML}
+  </div>
+
+  <div class="sec">
+    <h2>5. Satisfacción de las jornadas</h2>
+    ${satHTML}
+  </div>
+
+  <div class="sec">
+    <h2>6. Desempeño por prestador (insumo para requisiciones)</h2>
+    ${prestHTML}
+  </div>
+
+  ${comHTML}
+
+  <div class="foot">
+    Documento generado automáticamente por el SGI “Mi Barrio, Mi Patrimonio”. Contiene exclusivamente datos agregados con fines de seguimiento y rendición de cuentas; no incluye datos personales de las niñas, niños ni de la comunidad escolar, en cumplimiento de la LGPDPPSO. Las encuestas son anónimas.
+  </div>
+</div></body></html>`;
+  }
+
+  document.getElementById('exportarInforme')?.addEventListener('click', exportarInformePDF);
 
   // Bitácora de auditoría (solo gestor)
   const ACCION_META = {
